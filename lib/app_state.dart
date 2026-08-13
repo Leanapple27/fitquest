@@ -499,6 +499,7 @@ String weeklyChallengeWeek = '';
     completedQuestIds.add(questId);
     xp += rewardXp;
     completedQuests++;
+    
 
     if (questId == 'morning_warrior') {
       morningWarriorCompleted = true;

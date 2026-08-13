@@ -110,10 +110,6 @@ void _completeQuest(String id, int xp) {
 
   if (!awarded) return;
 
-  // Count this completed activity toward the weekly challenge.
-  final weeklyCompleted =
-      widget.appState.completeWeeklyFitnessActivity();
-
   setState(() => _progress[id] = 1.0);
 
   ScaffoldMessenger.of(context)
@@ -122,8 +118,7 @@ void _completeQuest(String id, int xp) {
       SnackBar(
         behavior: SnackBarBehavior.floating,
         content: Text(
-          weeklyCompleted &&
-                  widget.appState.weeklyFitnessWarriorCompleted
+          widget.appState.weeklyFitnessWarriorCompleted
               ? '+$xp XP earned! 🎉 Weekly Warrior completed! +300 XP 🏆'
               : '+$xp XP earned! 🎉',
         ),
@@ -284,7 +279,7 @@ void _completeQuest(String id, int xp) {
 
     return widgets;
   }
- Widget _weeklyQuestPreviewCard({
+Widget _weeklyQuestPreviewCard({
   required String questId,
   required String emoji,
   required String title,
@@ -329,7 +324,6 @@ void _completeQuest(String id, int xp) {
               ),
               const SizedBox(height: 12),
 
-              // Weekly progress.
               Text(
                 completed
                     ? '5 / 5 activities ✓'
@@ -357,6 +351,7 @@ void _completeQuest(String id, int xp) {
                   fontWeight: FontWeight.w800,
                 ),
               ),
+
             ],
           ),
         ),
