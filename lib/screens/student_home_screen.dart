@@ -1,12 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import '../app_state.dart';
+import '../notification_service.dart';
+import 'ai_coach_screen.dart';
 import 'quests_screen.dart';
 import 'profile_screen.dart';
 import 'fitmap_screen.dart';
 import 'community_screen.dart';
 import 'quiz_screen.dart';
+import 'steps_screen.dart';
+import 'snap_screen.dart';
 
 class StudentHomeScreen extends StatefulWidget {
   const StudentHomeScreen({super.key});
@@ -18,7 +23,6 @@ class StudentHomeScreen extends StatefulWidget {
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
   int selectedIndex = 0;
 
-  // Shared FitQuest state.
   final AppState appState = AppState();
 
   String profileName = 'Student';
@@ -62,12 +66,15 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             if (name is String && name.trim().isNotEmpty) {
               profileName = name.trim();
             }
+
             if (schoolId is String) {
               profileSchoolId = schoolId.trim();
             }
+
             if (house is String && house.trim().isNotEmpty) {
               profileHouse = house.trim();
             }
+
             profileLoading = false;
           });
         }
@@ -93,8 +100,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         if (selectedIndex == 3) {
           return Scaffold(
             body: CommunityScreen(
-  appState: appState,
-),
+              appState: appState,
+            ),
             bottomNavigationBar: _buildBottomNavigation(),
           );
         }
@@ -102,8 +109,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         if (selectedIndex == 2) {
           return Scaffold(
             body: FitMapScreen(
-  appState: appState,
-),
+              appState: appState,
+            ),
             bottomNavigationBar: _buildBottomNavigation(),
           );
         }
@@ -140,14 +147,27 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                       24,
                     ),
                     child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildHeader(),
 
                         const SizedBox(height: 20),
 
+                        // NEW: FitQuest Snap
+                        _buildSnapCard(),
+
+                        const SizedBox(height: 18),
+
+                        // EXISTING FEATURES - PRESERVED
                         _buildStreakCard(),
+
+                        const SizedBox(height: 18),
+
+                        _buildStepsCard(),
+
+                        const SizedBox(height: 18),
+
+                        _buildAiCoachCard(),
 
                         const SizedBox(height: 18),
 
@@ -155,20 +175,19 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
                         const SizedBox(height: 18),
 
-                      _buildQuestCard(),
+                        _buildQuestCard(),
 
-const SizedBox(height: 18),
+                        const SizedBox(height: 18),
 
-_buildQuizCard(),
+                        _buildQuizCard(),
 
-const SizedBox(height: 18),
+                        const SizedBox(height: 18),
 
-_buildQuickStats(),
+                        _buildQuickStats(),
                       ],
                     ),
                   ),
                 ),
-
                 _buildBottomNavigation(),
               ],
             ),
@@ -177,6 +196,10 @@ _buildQuickStats(),
       },
     );
   }
+
+  // ============================================================
+  // HEADER
+  // ============================================================
 
   Widget _buildHeader() {
     return Row(
@@ -248,14 +271,262 @@ _buildQuickStats(),
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
           ),
-          child: const Icon(
-            Icons.notifications_none_rounded,
-            color: Color(0xFF151B3D),
+          child: IconButton(
+            tooltip: 'Notifications',
+            onPressed: _showNotificationsDialog,
+            icon: const Icon(
+              Icons.notifications_none_rounded,
+              color: Color(0xFF151B3D),
+            ),
           ),
         ),
       ],
     );
   }
+
+  // ============================================================
+  // NEW: FITQUEST SNAP
+  // ============================================================
+
+  Widget _buildSnapCard() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const SnapScreen(),
+          ),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [
+              Color(0xFFFF5E62),
+              Color(0xFFFF9966),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 58,
+              height: 58,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.20),
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Text(
+                  '📸',
+                  style: TextStyle(fontSize: 30),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 15),
+
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'FITQUEST SNAP',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+
+                  SizedBox(height: 4),
+
+                  Text(
+                    'Show your fitness moment ✨',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+
+                  SizedBox(height: 3),
+
+                  Text(
+                    'Filters • XP • Privacy-first',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Colors.white,
+              size: 30,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // NOTIFICATIONS
+  // ============================================================
+
+  void _showNotificationsDialog() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: const Row(
+            children: [
+              Icon(
+                Icons.notifications_rounded,
+                color: Color(0xFF302B63),
+              ),
+              SizedBox(width: 10),
+              Text(
+                'Notifications',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _notificationItem(
+                '🔥',
+                'Streak reminder',
+                'Keep your streak alive today!',
+              ),
+
+              const SizedBox(height: 14),
+
+              _notificationItem(
+                '👟',
+                'Step reminder',
+                'Keep moving toward your daily goal.',
+              ),
+
+              const SizedBox(height: 14),
+
+              _notificationItem(
+                '🎯',
+                'Quest reminder',
+                'Your daily quest is waiting.',
+              ),
+
+              const SizedBox(height: 18),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    Navigator.pop(dialogContext);
+
+                    await NotificationService.requestPermission();
+
+                    await NotificationService
+                        .showMotivationNotification();
+
+                    if (!mounted) return;
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          '🔔 Motivation notification sent!',
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.send_rounded),
+                  label: const Text('Send Motivation'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF302B63),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _notificationItem(
+    String emoji,
+    String title,
+    String message,
+  ) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          emoji,
+          style: const TextStyle(fontSize: 25),
+        ),
+
+        const SizedBox(width: 12),
+
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF151B3D),
+                ),
+              ),
+
+              const SizedBox(height: 3),
+
+              Text(
+                message,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.black54,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
+  // STREAK
+  // ============================================================
 
   Widget _buildStreakCard() {
     return GestureDetector(
@@ -282,8 +553,7 @@ _buildQuickStats(),
               width: 58,
               height: 58,
               decoration: BoxDecoration(
-                color:
-                    Colors.white.withValues(alpha: 0.18),
+                color: Colors.white.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
               ),
               child: const Center(
@@ -298,8 +568,7 @@ _buildQuickStats(),
 
             Expanded(
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     '${appState.streak} DAY STREAK',
@@ -335,17 +604,212 @@ _buildQuickStats(),
     );
   }
 
+  // ============================================================
+  // STEP COUNTER
+  // ============================================================
+
+  Widget _buildStepsCard() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const StepsScreen(),
+          ),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 15,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 62,
+              height: 62,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEDEBFF),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: const Center(
+                child: Text(
+                  '👟',
+                  style: TextStyle(fontSize: 32),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'STEP COUNTER',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
+                      color: Colors.black45,
+                    ),
+                  ),
+
+                  SizedBox(height: 5),
+
+                  Text(
+                    'Track your real steps',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF151B3D),
+                    ),
+                  ),
+
+                  SizedBox(height: 4),
+
+                  Text(
+                    'Powered by Health Connect',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 30,
+              color: Color(0xFF302B63),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // AI COACH
+  // ============================================================
+
+  Widget _buildAiCoachCard() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const AiCoachScreen(),
+          ),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [
+              Color(0xFF302B63),
+              Color(0xFF51489A),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 62,
+              height: 62,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: const Center(
+                child: Text(
+                  'AI',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'AI FITNESS COACH',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
+                    ),
+                  ),
+
+                  SizedBox(height: 5),
+
+                  Text(
+                    'Your personal coach',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+
+                  SizedBox(height: 4),
+
+                  Text(
+                    'Get workouts, motivation & fitness advice',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Colors.white,
+              size: 30,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // PLAYER / XP
+  // ============================================================
+
   Widget _buildPlayerCard() {
     final int currentXp = appState.xp;
 
-    final int level =
-        (currentXp ~/ 250) + 1;
+    final int level = (currentXp ~/ 250) + 1;
 
-    final int currentLevelStart =
-        (level - 1) * 250;
+    final int currentLevelStart = (level - 1) * 250;
 
-    final int nextLevelXp =
-        level * 250;
+    final int nextLevelXp = level * 250;
 
     final int levelRange =
         nextLevelXp - currentLevelStart;
@@ -353,11 +817,9 @@ _buildQuickStats(),
     final int xpIntoLevel =
         currentXp - currentLevelStart;
 
-    final double progress =
-        levelRange <= 0
-            ? 1.0
-            : (xpIntoLevel / levelRange)
-                .clamp(0.0, 1.0);
+    final double progress = levelRange <= 0
+        ? 1.0
+        : (xpIntoLevel / levelRange).clamp(0.0, 1.0);
 
     final int xpRemaining =
         nextLevelXp > currentXp
@@ -379,12 +841,10 @@ _buildQuickStats(),
                 width: 82,
                 height: 82,
                 decoration: BoxDecoration(
-                  color:
-                      Colors.white.withValues(alpha: 0.12),
+                  color: Colors.white.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color:
-                        Colors.white.withValues(alpha: 0.25),
+                    color: Colors.white.withValues(alpha: 0.25),
                     width: 2,
                   ),
                 ),
@@ -462,8 +922,7 @@ _buildQuickStats(),
               Text(
                 '$nextLevelXp XP',
                 style: TextStyle(
-                  color:
-                      Colors.white.withValues(alpha: 0.65),
+                  color: Colors.white.withValues(alpha: 0.65),
                   fontSize: 12,
                 ),
               ),
@@ -505,6 +964,10 @@ _buildQuickStats(),
     );
   }
 
+  // ============================================================
+  // QUEST
+  // ============================================================
+
   Widget _buildQuestCard() {
     final bool completed =
         appState.morningWarriorCompleted;
@@ -517,8 +980,7 @@ _buildQuickStats(),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color:
-                Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 15,
             offset: const Offset(0, 6),
           ),
@@ -531,8 +993,7 @@ _buildQuickStats(),
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 10,
                   vertical: 6,
                 ),
@@ -545,8 +1006,8 @@ _buildQuickStats(),
                 ),
                 child: Text(
                   completed
-                      ? '✅ QUEST COMPLETE'
-                      : '⚔️ TODAY\'S QUEST',
+                      ? 'QUEST COMPLETE'
+                      : 'TODAY\'S QUEST',
                   style: TextStyle(
                     color: completed
                         ? const Color(0xFF27733A)
@@ -619,7 +1080,7 @@ _buildQuickStats(),
               ),
               child: Text(
                 completed
-                    ? 'QUEST COMPLETED ✓'
+                    ? 'QUEST COMPLETED'
                     : 'START QUEST',
                 style: const TextStyle(
                   fontWeight: FontWeight.w900,
@@ -632,89 +1093,98 @@ _buildQuickStats(),
       ),
     );
   }
-Widget _buildQuizCard() {
-  return Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(24),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.04),
-          blurRadius: 12,
-          offset: const Offset(0, 5),
-        ),
-      ],
-    ),
-    child: Row(
-      children: [
-        Container(
-          width: 58,
-          height: 58,
-          decoration: BoxDecoration(
-            color: const Color(0xFFEDEBFF),
-            borderRadius: BorderRadius.circular(17),
+
+  // ============================================================
+  // QUIZ
+  // ============================================================
+
+  Widget _buildQuizCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
           ),
-          child: const Center(
-            child: Text(
-              '🧠',
-              style: TextStyle(fontSize: 29),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEDEBFF),
+              borderRadius: BorderRadius.circular(17),
+            ),
+            child: const Center(
+              child: Text(
+                '🧠',
+                style: TextStyle(fontSize: 29),
+              ),
             ),
           ),
-        ),
 
-        const SizedBox(width: 14),
+          const SizedBox(width: 14),
 
-        const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Daily Fitness Quiz',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF151B3D),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Daily Fitness Quiz',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF151B3D),
+                  ),
                 ),
-              ),
 
-              SizedBox(height: 4),
+                SizedBox(height: 4),
 
-              Text(
-                'Test your knowledge and earn up to 100 XP.',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.black45,
-                  height: 1.3,
+                Text(
+                  'Test your knowledge and earn up to 100 XP.',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.black45,
+                    height: 1.3,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
 
-        const SizedBox(width: 8),
-
-        IconButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => QuizScreen(
-                  appState: appState,
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => QuizScreen(
+                    appState: appState,
+                  ),
                 ),
-              ),
-            );
-          },
-          icon: const Icon(
-            Icons.arrow_forward_rounded,
-            color: Color(0xFF302B63),
+              );
+            },
+            icon: const Icon(
+              Icons.arrow_forward_rounded,
+              color: Color(0xFF302B63),
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // QUICK STATS
+  // ============================================================
+
   Widget _buildQuickStats() {
     return Row(
       children: [
@@ -798,6 +1268,10 @@ Widget _buildQuizCard() {
     );
   }
 
+  // ============================================================
+  // BOTTOM NAVIGATION
+  // ============================================================
+
   Widget _buildBottomNavigation() {
     return Container(
       padding: const EdgeInsets.fromLTRB(
@@ -875,6 +1349,10 @@ Widget _buildQuizCard() {
     );
   }
 }
+
+// ============================================================
+// NAV ITEM
+// ============================================================
 
 class _NavItem extends StatelessWidget {
   final IconData icon;

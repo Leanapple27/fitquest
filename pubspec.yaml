@@ -8,13 +8,18 @@ environment:
   sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
+  pedometer: ^4.2.0
   cloud_firestore: ^6.8.0
   firebase_auth: ^6.5.7
   firebase_core: ^4.13.0
+  health: ^13.3.1
+  camera: ^0.11.2
   flutter:
     sdk: flutter
 
   shared_preferences: ^2.5.3
+
+  
 
 dev_dependencies:
   flutter_test:

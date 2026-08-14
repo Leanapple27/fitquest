@@ -3,14 +3,20 @@ import 'package:flutter/material.dart';
 
 import 'firebase_options.dart';
 import 'screens/welcome_screen.dart';
-
+import 'notification_service.dart';
+import 'theme_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await NotificationService.initialize();
+  await NotificationService.requestPermission();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  await ThemeController.instance.load();
 
   runApp(const FitQuestApp());
 }
@@ -20,14 +26,32 @@ class FitQuestApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'FitQuest',
-      theme: ThemeData(
-        useMaterial3: true,
-        fontFamily: 'Arial',
-      ),
-      home: const WelcomeScreen(),
+    return AnimatedBuilder(
+      animation: ThemeController.instance,
+      builder: (context, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'FitQuest',
+          themeMode: ThemeController.instance.themeMode,
+
+          theme: ThemeData(
+            useMaterial3: true,
+            fontFamily: 'Arial',
+            brightness: Brightness.light,
+            colorSchemeSeed: const Color(0xFF302B63),
+          ),
+
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            fontFamily: 'Arial',
+            brightness: Brightness.dark,
+            colorSchemeSeed: const Color(0xFF7C72E8),
+            scaffoldBackgroundColor: const Color(0xFF10111A),
+          ),
+
+          home: const WelcomeScreen(),
+        );
+      },
     );
   }
 }

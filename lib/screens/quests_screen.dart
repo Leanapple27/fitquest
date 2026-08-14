@@ -2,95 +2,112 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../app_state.dart';
+import 'workout_screen.dart';
 
 class QuestsScreen extends StatefulWidget {
   final AppState appState;
 
-    const QuestsScreen({super.key, required this.appState});
+  const QuestsScreen({
+    super.key,
+    required this.appState,
+  });
 
-    @override
-    State<QuestsScreen> createState() => _QuestsScreenState();
-    }
-
-    class _QuestsScreenState extends State<QuestsScreen> {
-    final Map<String, double> _progress = {};
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> _quests = [];
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> _weeklyQuests = [];
-    bool _loading = true;
-    String? _error;
-
-    @override
-    void initState() {
-        super.initState();
-        _loadQuests();
-    }
-
-    Future<void> _loadQuests() async {
-        try {
-        await widget.appState.ensureDailyQuestDay();
-        final snapshot = await FirebaseFirestore.instance
-        .collection('quests')
-    .get(const GetOptions(source: Source.server));
-        debugPrint('FIRESTORE QUEST COUNT: ${snapshot.docs.length}');
-
-    for (final doc in snapshot.docs) {
-    final data = doc.data();
-    debugPrint(
-    'QUEST RAW: id=${doc.id}, '
-    'title=${data['title']}, '
-    'active=${data['active']} (${data['active'].runtimeType}), '
-    'type=${data['type']} (${data['type'].runtimeType})',
-  );
+  @override
+  State<QuestsScreen> createState() => _QuestsScreenState();
 }
 
-     final dailyDocs = snapshot.docs.where((doc) {
-  final data = doc.data();
+class _QuestsScreenState extends State<QuestsScreen> {
+  final Map<String, double> _progress = {};
 
-  return data['active'] == true &&
-      data['type']?.toString().toLowerCase() == 'daily';
-}).toList();
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _quests = [];
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _weeklyQuests = [];
 
-final weeklyDocs = snapshot.docs.where((doc) {
-  final data = doc.data();
+  bool _loading = true;
+  String? _error;
 
-  debugPrint(
-    'WEEKLY CHECK: id=${doc.id}, '
-    'title=${data['title']}, '
-    'active=${data['active']} (${data['active'].runtimeType}), '
-    'type=${data['type']} (${data['type'].runtimeType})',
-  );
+  @override
+  void initState() {
+    super.initState();
+    _loadQuests();
+  }
 
-  return data['active'] == true &&
-      data['type']?.toString().toLowerCase() == 'weekly';
-}).toList();
-for (final doc in dailyDocs) {
-  _progress[doc.id] =
-      widget.appState.isDailyQuestCompleted(doc.id) ? 1.0 : 0.0;
-}
+  Future<void> _loadQuests() async {
+    try {
+      await widget.appState.ensureDailyQuestDay();
+
+      final snapshot = await FirebaseFirestore.instance
+          .collection('quests')
+          .get(const GetOptions(source: Source.server));
+
+      debugPrint('FIRESTORE QUEST COUNT: ${snapshot.docs.length}');
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+
+        debugPrint(
+          'QUEST RAW: id=${doc.id}, '
+          'title=${data['title']}, '
+          'active=${data['active']} (${data['active'].runtimeType}), '
+          'type=${data['type']} (${data['type'].runtimeType})',
+        );
+      }
+
+      final dailyDocs = snapshot.docs.where((doc) {
+        final data = doc.data();
+
+        return data['active'] == true &&
+            data['type']?.toString().toLowerCase() == 'daily';
+      }).toList();
+
+      final weeklyDocs = snapshot.docs.where((doc) {
+        final data = doc.data();
+
+        debugPrint(
+          'WEEKLY CHECK: id=${doc.id}, '
+          'title=${data['title']}, '
+          'active=${data['active']} (${data['active'].runtimeType}), '
+          'type=${data['type']} (${data['type'].runtimeType})',
+        );
+
+        return data['active'] == true &&
+            data['type']?.toString().toLowerCase() == 'weekly';
+      }).toList();
+
+      for (final doc in dailyDocs) {
+        _progress[doc.id] =
+            widget.appState.isDailyQuestCompleted(doc.id) ? 1.0 : 0.0;
+      }
 
       if (!mounted) return;
+
       setState(() {
         _quests = dailyDocs;
-_weeklyQuests = weeklyDocs;
+        _weeklyQuests = weeklyDocs;
         _loading = false;
         _error = null;
       });
     } catch (e) {
-  debugPrint('QUEST LOAD ERROR: $e');
+      debugPrint('QUEST LOAD ERROR: $e');
+
       if (!mounted) return;
+
       setState(() {
         _loading = false;
-        _error = 'Could not load quests. Check your internet connection.';
+        _error =
+            'Could not load quests. Check your internet connection.';
       });
     }
   }
 
-  bool _isCompleted(String id) =>
-      widget.appState.isDailyQuestCompleted(id);
+  bool _isCompleted(String id) {
+    return widget.appState.isDailyQuestCompleted(id);
+  }
 
   void _startQuest(String id) {
     setState(() {
-      if ((_progress[id] ?? 0) == 0) _progress[id] = 0.1;
+      if ((_progress[id] ?? 0) == 0) {
+        _progress[id] = 0.1;
+      }
     });
   }
 
@@ -100,38 +117,56 @@ _weeklyQuests = weeklyDocs;
       _progress[id] = next > 1 ? 1 : next;
     });
   }
-void _completeQuest(String id, int xp) {
-  if (_isCompleted(id)) return;
 
-  final awarded = widget.appState.completeDynamicQuest(
-    questId: id,
-    rewardXp: xp,
-  );
+  void _completeQuest(String id, int xp) {
+    if (_isCompleted(id)) return;
 
-  if (!awarded) return;
+    final awarded = widget.appState.completeDynamicQuest(
+      questId: id,
+      rewardXp: xp,
+    );
 
-  setState(() => _progress[id] = 1.0);
+    if (!awarded) return;
 
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        content: Text(
-          widget.appState.weeklyFitnessWarriorCompleted
-              ? '+$xp XP earned! 🎉 Weekly Warrior completed! +300 XP 🏆'
-              : '+$xp XP earned! 🎉',
+    setState(() {
+      _progress[id] = 1.0;
+    });
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text(
+            widget.appState.weeklyFitnessWarriorCompleted
+                ? '+$xp XP earned! 🎉 Weekly Warrior completed! +300 XP 🏆'
+                : '+$xp XP earned! 🎉',
+          ),
+          duration: const Duration(seconds: 2),
         ),
-        duration: const Duration(seconds: 2),
+      );
+  }
+
+  void _openWorkoutCenter() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => WorkoutScreen(
+          appState: widget.appState,
+        ),
       ),
     );
-}
+  }
 
   @override
   Widget build(BuildContext context) {
-    final completed = _quests.where((q) => _isCompleted(q.id)).length;
+    final completed =
+        _quests.where((q) => _isCompleted(q.id)).length;
+
     final total = _quests.length;
-    final progress = total == 0 ? 0.0 : completed / total;
+
+    final progress =
+        total == 0 ? 0.0 : completed / total;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
@@ -163,7 +198,9 @@ void _completeQuest(String id, int xp) {
               totalQuests: total,
               xp: widget.appState.xp,
             ),
+
             const SizedBox(height: 20),
+
             const Text(
               "TODAY'S QUESTS",
               style: TextStyle(
@@ -173,14 +210,22 @@ void _completeQuest(String id, int xp) {
                 color: Colors.black45,
               ),
             ),
+
             const SizedBox(height: 12),
+
             if (_loading)
               const Padding(
                 padding: EdgeInsets.all(50),
-                child: Center(child: CircularProgressIndicator()),
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
               )
             else if (_error != null)
-              _messageCard(_error!, 'TRY AGAIN', _loadQuests)
+              _messageCard(
+                _error!,
+                'TRY AGAIN',
+                _loadQuests,
+              )
             else if (_quests.isEmpty)
               _messageCard(
                 'No daily quests are active right now.',
@@ -189,7 +234,13 @@ void _completeQuest(String id, int xp) {
               )
             else
               ..._questWidgets(),
+
             const SizedBox(height: 24),
+
+            _buildWorkoutCenterCard(),
+
+            const SizedBox(height: 24),
+
             _bonusQuestCard(),
           ],
         ),
@@ -199,15 +250,27 @@ void _completeQuest(String id, int xp) {
 
   List<Widget> _questWidgets() {
     final widgets = <Widget>[];
+
     for (var i = 0; i < _quests.length; i++) {
       final data = _quests[i].data();
-      final title = data['title'] as String? ?? 'Daily Quest';
-      final description = data['description'] as String? ??
-          "Complete today's fitness challenge.";
-      final icon = data['icon'] as String? ?? '🎯';
-      final xp = (data['xp'] as num?)?.toInt() ?? 0;
 
-      if (i > 0) widgets.add(const SizedBox(height: 14));
+      final title =
+          data['title'] as String? ?? 'Daily Quest';
+
+      final description =
+          data['description'] as String? ??
+              "Complete today's fitness challenge.";
+
+      final icon =
+          data['icon'] as String? ?? '🎯';
+
+      final xp =
+          (data['xp'] as num?)?.toInt() ?? 0;
+
+      if (i > 0) {
+        widgets.add(const SizedBox(height: 14));
+      }
+
       widgets.add(
         _questCard(
           questId: _quests[i].id,
@@ -217,11 +280,7 @@ void _completeQuest(String id, int xp) {
           xp: xp,
         ),
       );
-        }
-
-    // -----------------------------
-    // WEEKLY CHALLENGES
-    // -----------------------------
+    }
 
     widgets.add(const SizedBox(height: 28));
 
@@ -254,12 +313,15 @@ void _completeQuest(String id, int xp) {
         final title =
             data['title'] as String? ?? 'Weekly Challenge';
 
-        final description = data['description'] as String? ??
-            'Complete this week\'s fitness challenge.';
+        final description =
+            data['description'] as String? ??
+                "Complete this week's fitness challenge.";
 
-        final icon = data['icon'] as String? ?? '🏆';
+        final icon =
+            data['icon'] as String? ?? '🏆';
 
-        final xp = (data['xp'] as num?)?.toInt() ?? 0;
+        final xp =
+            (data['xp'] as num?)?.toInt() ?? 0;
 
         widgets.add(
           _weeklyQuestPreviewCard(
@@ -279,86 +341,258 @@ void _completeQuest(String id, int xp) {
 
     return widgets;
   }
-Widget _weeklyQuestPreviewCard({
-  required String questId,
-  required String emoji,
-  required String title,
-  required String description,
-  required int xp,
-}) {
-  final progress = widget.appState.weeklyFitnessActivities;
-  final completed =
-      widget.appState.weeklyFitnessWarriorCompleted;
 
-  return Container(
-    padding: const EdgeInsets.all(18),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(18),
-    ),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          emoji,
-          style: const TextStyle(fontSize: 32),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                description,
-                style: const TextStyle(
-                  color: Colors.black54,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              Text(
-                completed
-                    ? '5 / 5 activities ✓'
-                    : '$progress / 5 activities',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: LinearProgressIndicator(
-                  value: progress.clamp(0, 5) / 5,
-                  minHeight: 8,
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              Text(
-                completed ? 'COMPLETED • +$xp XP' : '+$xp XP',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-
+  Widget _buildWorkoutCenterCard() {
+    return GestureDetector(
+      onTap: _openWorkoutCenter,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [
+              Color(0xFF302B63),
+              Color(0xFF51489A),
             ],
           ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.07),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
-      ],
-    ),
-  );
-}
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 58,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(17),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      '🏋️',
+                      style: TextStyle(fontSize: 30),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 14),
+
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'WORKOUT CENTER',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Turn your quest into action 💪',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Colors.white,
+                  size: 30,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            const Text(
+              'Timed workouts • Yoga • Gym • HIIT • Beginner to Hard',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+                height: 1.4,
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                _workoutFeatureChip('⏱️', 'Timer'),
+                const SizedBox(width: 8),
+                _workoutFeatureChip('⭐', 'Earn XP'),
+                const SizedBox(width: 8),
+                _workoutFeatureChip('🔥', 'Streak'),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: ElevatedButton(
+                onPressed: _openWorkoutCenter,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF302B63),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text(
+                  'EXPLORE WORKOUTS',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _workoutFeatureChip(
+    String emoji,
+    String label,
+  ) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 6,
+          vertical: 9,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              emoji,
+              style: const TextStyle(fontSize: 13),
+            ),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _weeklyQuestPreviewCard({
+    required String questId,
+    required String emoji,
+    required String title,
+    required String description,
+    required int xp,
+  }) {
+    final progress =
+        widget.appState.weeklyFitnessActivities;
+
+    final completed =
+        widget.appState.weeklyFitnessWarriorCompleted;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            emoji,
+            style: const TextStyle(fontSize: 32),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  description,
+                  style: const TextStyle(
+                    color: Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  completed
+                      ? '5 / 5 activities ✓'
+                      : '$progress / 5 activities',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius:
+                      BorderRadius.circular(10),
+                  child: LinearProgressIndicator(
+                    value:
+                        progress.clamp(0, 5) / 5,
+                    minHeight: 8,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  completed
+                      ? 'COMPLETED • +$xp XP'
+                      : '+$xp XP',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _messageCard(
     String message,
     String buttonText,
@@ -381,7 +615,9 @@ Widget _weeklyQuestPreviewCard({
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.black54),
+            style: const TextStyle(
+              color: Colors.black54,
+            ),
           ),
           const SizedBox(height: 16),
           OutlinedButton(
@@ -403,12 +639,16 @@ Widget _weeklyQuestPreviewCard({
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF302B63), Color(0xFF51489A)],
+          colors: [
+            Color(0xFF302B63),
+            Color(0xFF51489A),
+          ],
         ),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           const Text(
             "TODAY'S PROGRESS",
@@ -435,7 +675,8 @@ Widget _weeklyQuestPreviewCard({
               value: progress,
               minHeight: 9,
               backgroundColor: Colors.white24,
-              valueColor: const AlwaysStoppedAnimation<Color>(
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(
                 Color(0xFFFFD166),
               ),
             ),
@@ -443,7 +684,10 @@ Widget _weeklyQuestPreviewCard({
           const SizedBox(height: 10),
           Text(
             '$xp XP total',
-            style: const TextStyle(color: Colors.white70, fontSize: 12),
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -487,7 +731,8 @@ Widget _weeklyQuestPreviewCard({
       child: Column(
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
               Container(
                 width: 54,
@@ -496,19 +741,22 @@ Widget _weeklyQuestPreviewCard({
                   color: completed
                       ? const Color(0xFFEAF6EE)
                       : const Color(0xFFEDEBFF),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius:
+                      BorderRadius.circular(16),
                 ),
                 child: Center(
                   child: Text(
                     completed ? '✅' : emoji,
-                    style: const TextStyle(fontSize: 28),
+                    style:
+                        const TextStyle(fontSize: 28),
                   ),
                 ),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
@@ -540,18 +788,24 @@ Widget _weeklyQuestPreviewCard({
               ),
             ],
           ),
+
           if (started && !completed) ...[
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
-                  child: LinearProgressIndicator(value: current),
+                  child: LinearProgressIndicator(
+                    value: current,
+                  ),
                 ),
                 const SizedBox(width: 10),
-                Text('${(current * 100).round()}%'),
+                Text(
+                  '${(current * 100).round()}%',
+                ),
               ],
             ),
           ],
+
           if (completed) ...[
             const SizedBox(height: 14),
             Container(
@@ -559,7 +813,8 @@ Widget _weeklyQuestPreviewCard({
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: const Color(0xFFEAF6EE),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius:
+                    BorderRadius.circular(12),
               ),
               child: const Text(
                 '✓ Quest completed! XP added once.',
@@ -571,7 +826,9 @@ Widget _weeklyQuestPreviewCard({
               ),
             ),
           ],
+
           const SizedBox(height: 16),
+
           SizedBox(
             width: double.infinity,
             height: 44,
@@ -584,12 +841,17 @@ Widget _weeklyQuestPreviewCard({
                       } else if (current < 1) {
                         _continueQuest(questId);
                       } else {
-                        _completeQuest(questId, xp);
+                        _completeQuest(
+                          questId,
+                          xp,
+                        );
                       }
                     },
               child: Text(
                 buttonText,
-                style: const TextStyle(fontWeight: FontWeight.w800),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ),
@@ -604,15 +866,21 @@ Widget _weeklyQuestPreviewCard({
       decoration: BoxDecoration(
         color: const Color(0xFFFFF4D8),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFFFD166)),
+        border: Border.all(
+          color: const Color(0xFFFFD166),
+        ),
       ),
       child: const Row(
         children: [
-          Text('🏆', style: TextStyle(fontSize: 35)),
+          Text(
+            '🏆',
+            style: TextStyle(fontSize: 35),
+          ),
           SizedBox(width: 14),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
               children: [
                 Text(
                   'Weekend Champion',
@@ -625,7 +893,10 @@ Widget _weeklyQuestPreviewCard({
                 SizedBox(height: 5),
                 Text(
                   'Complete 60 minutes of activity this weekend.',
-                  style: TextStyle(fontSize: 12, color: Colors.black54),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.black54,
+                  ),
                 ),
               ],
             ),

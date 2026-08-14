@@ -1,1 +1,24 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"fitquest-7e113","appId":"1:489518181456:android:1daf835ff838144e57b555","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"fitquest-7e113","configurations":{"android":"1:489518181456:android:1daf835ff838144e57b555"}}}}}}
+{
+    "flutter": {
+      "platforms": {
+        "android": {
+          "default": {
+            "projectId": "fitquest-7e113",
+            "appId": "1:489518181456:android:1daf835ff838144e57b555",
+            "fileOutput": "android/app/google-services.json"
+          }
+        },
+        "dart": {
+          "lib/firebase_options.dart": {
+            "projectId": "fitquest-7e113",
+            "configurations": {
+              "android": "1:489518181456:android:1daf835ff838144e57b555"
+            }
+          }
+        }
+      }
+    },
+    "firestore": {
+      "rules": "firestore.rules"
+    }
+  }

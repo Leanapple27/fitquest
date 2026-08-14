@@ -1,0 +1,77 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // -------------------------
+    // USERS
+    // -------------------------
+
+    match /users/{userId} {
+      allow read, create, update, delete:
+        if signedIn();
+    }
+
+    // -------------------------
+    // CLANS
+    // -------------------------
+
+    match /clans/{clanId} {
+
+      // Prototype:
+      // Any authenticated user can discover/open clans.
+      allow read: if signedIn();
+
+      // Any authenticated user can create a clan.
+      allow create: if signedIn();
+
+      // Prototype:
+      // Allow authenticated users to update clan data.
+      allow update: if signedIn();
+
+      allow delete: if signedIn();
+
+      // -------------------------
+      // CLAN MEMBERS
+      // -------------------------
+
+      match /members/{memberId} {
+
+        // Members can be displayed by any signed-in user.
+        allow read: if signedIn();
+
+        // Any signed-in user can join/create a member record.
+        allow create: if signedIn();
+
+        // Allow member activity updates.
+        allow update: if signedIn();
+
+        // Allow leaving/removing a member.
+        allow delete: if signedIn();
+      }
+
+      // -------------------------
+      // CLAN CHAT
+      // -------------------------
+
+      match /messages/{messageId} {
+
+        // Signed-in users can read clan chat.
+        allow read: if signedIn();
+
+        // Signed-in users can send messages.
+        allow create: if signedIn();
+
+        // Signed-in users can delete messages.
+        allow delete: if signedIn();
+
+        // Allow message updates for prototype.
+        allow update: if signedIn();
+      }
+    }
+  }
+}

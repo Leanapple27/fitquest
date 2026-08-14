@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../app_state.dart';
 import 'rewards_screen.dart';
 import 'privacy_safety_screen.dart';
+import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final AppState appState;
@@ -122,9 +123,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: RefreshIndicator(
         onRefresh: _loadProfile,
         child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
           children: [
             _buildProfileHeader(),
+
             const SizedBox(height: 18),
 
             _buildStats(),
@@ -149,6 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                   },
                 ),
+
                 _buildMenuItem(
                   icon: '🎟️',
                   title: 'Sticker Collection',
@@ -164,6 +168,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                   },
                 ),
+
                 _buildMenuItem(
                   icon: '🏠',
                   title: '$house House',
@@ -192,6 +197,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                   },
                 ),
+
                 _buildMenuItem(
                   icon: '🔒',
                   title: 'Safety Centre',
@@ -222,11 +228,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       : schoolId,
                   onTap: () {},
                 ),
+
                 _buildMenuItem(
                   icon: '⚙️',
                   title: 'Settings',
                   subtitle: 'App preferences',
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SettingsScreen(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -237,15 +251,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               width: double.infinity,
               height: 50,
               child: OutlinedButton(
-                onPressed: () async {
-                  await FirebaseAuth.instance.signOut();
-
-                  if (!context.mounted) return;
-
-                  Navigator.of(context).popUntil(
-                    (route) => route.isFirst,
-                  );
-                },
+                onPressed: _logout,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFFD94B4B),
                   side: const BorderSide(
@@ -353,7 +359,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'XP',
           ),
         ),
+
         const SizedBox(width: 10),
+
         Expanded(
           child: _statCard(
             '🔥',
@@ -361,7 +369,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'Day Streak',
           ),
         ),
+
         const SizedBox(width: 10),
+
         Expanded(
           child: _statCard(
             '🏆',
@@ -393,7 +403,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             emoji,
             style: const TextStyle(fontSize: 22),
           ),
+
           const SizedBox(height: 7),
+
           Text(
             value,
             style: const TextStyle(
@@ -402,7 +414,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: Color(0xFF151B3D),
             ),
           ),
+
           const SizedBox(height: 2),
+
           Text(
             label,
             textAlign: TextAlign.center,
@@ -433,13 +447,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: Colors.black45,
           ),
         ),
+
         const SizedBox(height: 9),
+
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(18),
           ),
-          child: Column(children: children),
+          child: Column(
+            children: children,
+          ),
         ),
       ],
     );
@@ -489,6 +507,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Icons.chevron_right_rounded,
         color: Colors.black26,
       ),
+    );
+  }
+
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+
+    if (!mounted) return;
+
+    Navigator.of(context).popUntil(
+      (route) => route.isFirst,
     );
   }
 }

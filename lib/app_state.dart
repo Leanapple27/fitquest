@@ -19,8 +19,8 @@ class AppState extends ChangeNotifier {
   final Set<String> completedDailyQuestIds = {};
   String dailyQuestDate = '';
   int weeklyFitnessActivities = 0;
-bool weeklyFitnessWarriorCompleted = false;
-String weeklyChallengeWeek = '';
+  bool weeklyFitnessWarriorCompleted = false;
+  String weeklyChallengeWeek = '';
 
   bool morningWarriorCompleted = false;
   bool hydrationHeroCompleted = false;
@@ -67,6 +67,11 @@ String weeklyChallengeWeek = '';
   int get badges => unlockedBadges.length;
 
   int get stickers => unlockedStickers.length;
+  int get currentLevel => (xp ~/ 250).clamp(1, 15);
+
+  int get weeklyGoalProgress =>
+      weeklyFitnessActivities.clamp(0, 5);
+
 // -----------------------------
 // STORAGE KEYS
 // -----------------------------
@@ -102,19 +107,33 @@ String weeklyChallengeWeek = '';
   static const String _stickersKey =
       'unlockedStickers';
 
-  DocumentReference<Map<String, dynamic>>? get _userDoc {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return null;
-
-    return FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid);
+  // Local progress is isolated per Firebase account.
+  // This prevents one student on the same device from seeing another
+  // student's XP, quests, badges, stickers, or weekly progress.
+  String get _localStoragePrefix {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    return 'fitquest_${uid ?? 'signed_out'}';
   }
+
+  String _localKey(String key) {
+    return '${_localStoragePrefix}_$key';
+  }
+DocumentReference<Map<String, dynamic>>? get _userDoc {
+  final user = FirebaseAuth.instance.currentUser;
+
+  if (user == null) return null;
+
+  return FirebaseFirestore.instance
+      .collection('users')
+      .doc(user.uid);
+}
 // -----------------------------
 // CONSTRUCTOR
 // -----------------------------
 
   AppState() {
+    // AppState is created after authentication in StudentHomeScreen, so
+    // local progress is loaded using the signed-in student's UID.
     _loadProgress();
   }
 // -----------------------------
@@ -125,12 +144,12 @@ String weeklyChallengeWeek = '';
     final prefs = await SharedPreferences.getInstance();
 
     // Local storage is an offline fallback.
-    xp = prefs.getInt(_xpKey) ?? 0;
-    streak = prefs.getInt(_streakKey) ?? 0;
-    completedQuests = prefs.getInt(_completedQuestsKey) ?? 0;
+    xp = prefs.getInt(_localKey(_xpKey)) ?? 0;
+    streak = prefs.getInt(_localKey(_streakKey)) ?? 0;
+    completedQuests = prefs.getInt(_localKey(_completedQuestsKey)) ?? 0;
 
     final savedCompletedQuestIds =
-        prefs.getStringList(_completedQuestIdsKey);
+        prefs.getStringList(_localKey(_completedQuestIdsKey));
     if (savedCompletedQuestIds != null) {
       completedQuestIds
         ..clear()
@@ -138,27 +157,35 @@ String weeklyChallengeWeek = '';
     }
 
     final savedDailyQuestIds =
-        prefs.getStringList(_completedDailyQuestIdsKey);
+        prefs.getStringList(_localKey(_completedDailyQuestIdsKey));
     if (savedDailyQuestIds != null) {
       completedDailyQuestIds
         ..clear()
         ..addAll(savedDailyQuestIds);
     }
 
-    dailyQuestDate = prefs.getString(_dailyQuestDateKey) ?? '';
+    dailyQuestDate = prefs.getString(_localKey(_dailyQuestDateKey)) ?? '';
+    weeklyFitnessActivities =
+    prefs.getInt(_localKey('weeklyFitnessActivities')) ?? 0;
+
+weeklyFitnessWarriorCompleted =
+    prefs.getBool(_localKey('weeklyFitnessWarriorCompleted')) ?? false;
+
+weeklyChallengeWeek =
+    prefs.getString(_localKey('weeklyChallengeWeek')) ?? '';
 
     morningWarriorCompleted =
-        prefs.getBool(_morningWarriorKey) ?? false;
+        prefs.getBool(_localKey(_morningWarriorKey)) ?? false;
     hydrationHeroCompleted =
-        prefs.getBool(_hydrationHeroKey) ?? false;
+        prefs.getBool(_localKey(_hydrationHeroKey)) ?? false;
     stretchMasterCompleted =
-        prefs.getBool(_stretchMasterKey) ?? false;
+        prefs.getBool(_localKey(_stretchMasterKey)) ?? false;
     communityChallengeCompleted =
-        prefs.getBool(_communityChallengeKey) ?? false;
+        prefs.getBool(_localKey(_communityChallengeKey)) ?? false;
     quizCompleted =
-        prefs.getBool(_quizCompletedKey) ?? false;
+        prefs.getBool(_localKey(_quizCompletedKey)) ?? false;
 
-    final savedStickers = prefs.getStringList(_stickersKey);
+    final savedStickers = prefs.getStringList(_localKey(_stickersKey));
     if (savedStickers != null) {
       unlockedStickers
         ..clear()
@@ -183,6 +210,12 @@ String weeklyChallengeWeek = '';
               data['completedDailyQuestIds'];
           final firebaseDailyQuestDate = data['dailyQuestDate'];
           final firebaseStickers = data['stickers'];
+          final firebaseWeeklyFitnessActivities =
+              data['weeklyFitnessActivities'];
+          final firebaseWeeklyFitnessWarriorCompleted =
+              data['weeklyFitnessWarriorCompleted'];
+          final firebaseWeeklyChallengeWeek =
+              data['weeklyChallengeWeek'];
 
           if (firebaseXp is num) {
             xp = firebaseXp.toInt();
@@ -246,6 +279,18 @@ String weeklyChallengeWeek = '';
             quizCompleted = quiz;
           }
 
+          if (firebaseWeeklyFitnessActivities is num) {
+            weeklyFitnessActivities =
+                firebaseWeeklyFitnessActivities.toInt();
+          }
+          if (firebaseWeeklyFitnessWarriorCompleted is bool) {
+            weeklyFitnessWarriorCompleted =
+                firebaseWeeklyFitnessWarriorCompleted;
+          }
+          if (firebaseWeeklyChallengeWeek is String) {
+            weeklyChallengeWeek = firebaseWeeklyChallengeWeek;
+          }
+
           // Keep Firestore badges in sync with the rules below.
           _rebuildBadges();
         }
@@ -256,6 +301,7 @@ String weeklyChallengeWeek = '';
       }
     }
 
+    _ensureWeeklyChallengeWeekSync();
     _rebuildBadges();
     await _saveProgress();
     notifyListeners();
@@ -312,47 +358,77 @@ String weeklyChallengeWeek = '';
         'sports_star',
       );
     }
-  }
+  
+    // Weekly fitness warrior.
+    if (weeklyFitnessWarriorCompleted) {
+      unlockedBadges.add('weekly_warrior');
+    }
+
+    // Quiz master.
+    if (quizCompleted) {
+      unlockedBadges.add('quiz_master');
+    }
+
+    // Community hero.
+    if (communityChallengeCompleted) {
+      unlockedBadges.add('community_hero');
+    }
+
+    // Level 5.
+    if (currentLevel >= 5) {
+      unlockedBadges.add('level_5');
+    }
+
+    // Level 10.
+    if (currentLevel >= 10) {
+      unlockedBadges.add('level_10');
+    }
+
+    // 30 day streak.
+    if (streak >= 30) {
+      unlockedBadges.add('streak_legend');
+    }
+}
 // -----------------------------
 // SAVE PROGRESS
 // -----------------------------
 
   Future<void> _saveProgress() async {
-  final prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
 
   // Weekly challenge progress.
   await prefs.setInt(
-    'weeklyFitnessActivities',
+    _localKey('weeklyFitnessActivities'),
     weeklyFitnessActivities,
   );
 
   await prefs.setBool(
-    'weeklyFitnessWarriorCompleted',
+    _localKey('weeklyFitnessWarriorCompleted'),
     weeklyFitnessWarriorCompleted,
   );
 
   await prefs.setString(
-    'weeklyChallengeWeek',
+    _localKey('weeklyChallengeWeek'),
     weeklyChallengeWeek,
   );
 
   // Keep local storage as an offline fallback.
-  await prefs.setInt(_xpKey, xp);
-  await prefs.setInt(_streakKey, streak);
-  await prefs.setInt(_completedQuestsKey, completedQuests);
+  await prefs.setInt(_localKey(_xpKey), xp);
+  await prefs.setInt(_localKey(_streakKey), streak);
+  await prefs.setInt(_localKey(_completedQuestsKey), completedQuests);
 
   await prefs.setStringList(
-    _completedQuestIdsKey,
+    _localKey(_completedQuestIdsKey),
     completedQuestIds.toList(),
   );
 
   await prefs.setStringList(
-    _completedDailyQuestIdsKey,
+    _localKey(_completedDailyQuestIdsKey),
     completedDailyQuestIds.toList(),
   );
 
   await prefs.setString(
-    _dailyQuestDateKey,
+    _localKey(_dailyQuestDateKey),
     dailyQuestDate,
   );
 
@@ -387,7 +463,7 @@ String weeklyChallengeWeek = '';
   );
 
   // Save progress to this student's Firestore document.
-  // merge:true preserves name, schoolId, house, and email.
+  // merge\:true preserves name, schoolId, house, and email.
   try {
     final doc = _userDoc;
 
@@ -441,6 +517,40 @@ String weeklyChallengeWeek = '';
     final month = now.month.toString().padLeft(2, '0');
     final day = now.day.toString().padLeft(2, '0');
     return '${now.year}-$month-$day';
+  }
+
+  String _weekKey() {
+    final now = DateTime.now();
+    final monday = now.subtract(
+      Duration(days: now.weekday - 1),
+    );
+    final month = monday.month.toString().padLeft(2, '0');
+    final day = monday.day.toString().padLeft(2, '0');
+    return '${monday.year}-$month-$day';
+  }
+
+  void _ensureWeeklyChallengeWeekSync() {
+    final currentWeek = _weekKey();
+
+    if (weeklyChallengeWeek == currentWeek) {
+      return;
+    }
+
+    weeklyChallengeWeek = currentWeek;
+    weeklyFitnessActivities = 0;
+    weeklyFitnessWarriorCompleted = false;
+  }
+
+  Future<void> ensureWeeklyChallengeWeek() async {
+    final before = weeklyChallengeWeek;
+    _ensureWeeklyChallengeWeekSync();
+
+    if (before == weeklyChallengeWeek) {
+      return;
+    }
+
+    await _saveProgress();
+    notifyListeners();
   }
 
   Future<void> ensureDailyQuestDay() async {
@@ -499,7 +609,12 @@ String weeklyChallengeWeek = '';
     completedQuestIds.add(questId);
     xp += rewardXp;
     completedQuests++;
-    
+
+    // Count every successfully completed dynamic/daily quest toward the
+    // current weekly fitness challenge. The weekly challenge itself is not
+    // a dynamic quest, so it cannot accidentally count itself.
+    _ensureWeeklyChallengeWeekSync();
+    _incrementWeeklyFitnessActivity();
 
     if (questId == 'morning_warrior') {
       morningWarriorCompleted = true;
@@ -515,26 +630,40 @@ String weeklyChallengeWeek = '';
 
     return true;
   }
-     
 
-  bool completeWeeklyFitnessActivity() {
+  void _incrementWeeklyFitnessActivity() {
     if (weeklyFitnessWarriorCompleted) {
-      return false;
+      return;
     }
 
     if (weeklyFitnessActivities >= 5) {
-      return false;
+      return;
     }
 
     weeklyFitnessActivities++;
 
     if (weeklyFitnessActivities >= 5) {
+      weeklyFitnessActivities = 5;
       weeklyFitnessWarriorCompleted = true;
 
       xp += 300;
       completedQuests++;
 
       _checkRewards();
+    }
+  }
+
+  bool completeWeeklyFitnessActivity() {
+    _ensureWeeklyChallengeWeekSync();
+
+    final before = weeklyFitnessActivities;
+    final wasCompleted = weeklyFitnessWarriorCompleted;
+
+    _incrementWeeklyFitnessActivity();
+
+    if (before == weeklyFitnessActivities &&
+        wasCompleted == weeklyFitnessWarriorCompleted) {
+      return false;
     }
 
     notifyListeners();
@@ -692,6 +821,12 @@ String weeklyChallengeWeek = '';
 
     completedQuests = 0;
     completedQuestIds.clear();
+    completedDailyQuestIds.clear();
+    dailyQuestDate = '';
+
+    weeklyFitnessActivities = 0;
+    weeklyFitnessWarriorCompleted = false;
+    weeklyChallengeWeek = _weekKey();
 
     morningWarriorCompleted = false;
 
