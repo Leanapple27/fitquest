@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'leaderboard_screen.dart';
 
 import '../app_state.dart';
 import '../clan_service.dart';
@@ -61,7 +62,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
-      appBar: AppBar(
+            appBar: AppBar(
         title: const Text(
           'Community',
           style: TextStyle(
@@ -71,6 +72,36 @@ class _CommunityScreenState extends State<CommunityScreen> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: IconButton(
+              tooltip: 'Leaderboard',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => LeaderboardScreen(
+                      currentUserXp: widget.appState.xp,
+                    ),
+                  ),
+                );
+              },
+              icon: Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3D6),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.emoji_events_rounded,
+                  color: Color(0xFFFFA000),
+                  size: 22,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
