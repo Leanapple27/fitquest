@@ -97,103 +97,147 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     return AnimatedBuilder(
       animation: appState,
       builder: (context, child) {
-        if (selectedIndex == 3) {
-          return Scaffold(
-            body: CommunityScreen(
-              appState: appState,
-            ),
-            bottomNavigationBar: _buildBottomNavigation(),
-          );
-        }
-
-        if (selectedIndex == 2) {
-          return Scaffold(
-            body: FitMapScreen(
-              appState: appState,
-            ),
-            bottomNavigationBar: _buildBottomNavigation(),
-          );
-        }
-
-        if (selectedIndex == 4) {
-          return Scaffold(
-            body: ProfileScreen(
-              appState: appState,
-            ),
-            bottomNavigationBar: _buildBottomNavigation(),
-          );
-        }
-
-        if (selectedIndex == 1) {
-          return Scaffold(
-            body: QuestsScreen(
-              appState: appState,
-            ),
-            bottomNavigationBar: _buildBottomNavigation(),
-          );
-        }
-
         return Scaffold(
           backgroundColor: const Color(0xFFF5F6FA),
-          body: SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(
-                      20,
-                      16,
-                      20,
-                      24,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(),
+          body: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 320),
+            reverseDuration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            layoutBuilder: (currentChild, previousChildren) {
+              return Stack(
+                alignment: Alignment.topCenter,
+                children: <Widget>[
+                  ...previousChildren,
+                  if (currentChild != null) currentChild,
+                ],
+              );
+            },
+            transitionBuilder: (child, animation) {
+              final curved = CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              );
 
-                        const SizedBox(height: 20),
+              final slide = Tween<Offset>(
+                begin: const Offset(0.035, 0),
+                end: Offset.zero,
+              ).animate(curved);
 
-                        // NEW: FitQuest Snap
-                        _buildSnapCard(),
-
-                        const SizedBox(height: 18),
-
-                        // EXISTING FEATURES - PRESERVED
-                        _buildStreakCard(),
-
-                        const SizedBox(height: 18),
-
-                        _buildStepsCard(),
-
-                        const SizedBox(height: 18),
-
-                        _buildAiCoachCard(),
-
-                        const SizedBox(height: 18),
-
-                        _buildPlayerCard(),
-
-                        const SizedBox(height: 18),
-
-                        _buildQuestCard(),
-
-                        const SizedBox(height: 18),
-
-                        _buildQuizCard(),
-
-                        const SizedBox(height: 18),
-
-                        _buildQuickStats(),
-                      ],
-                    ),
-                  ),
+              return FadeTransition(
+                opacity: curved,
+                child: SlideTransition(
+                  position: slide,
+                  child: child,
                 ),
-                _buildBottomNavigation(),
-              ],
-            ),
+              );
+            },
+            child: _buildSelectedPage(),
           ),
+          bottomNavigationBar: _buildBottomNavigation(),
         );
       },
+    );
+  }
+
+  Widget _buildSelectedPage() {
+    switch (selectedIndex) {
+      case 1:
+        return KeyedSubtree(
+          key: const ValueKey('quests'),
+          child: QuestsScreen(
+            appState: appState,
+          ),
+        );
+
+      case 2:
+        return KeyedSubtree(
+          key: const ValueKey('fitmap'),
+          child: FitMapScreen(
+            appState: appState,
+          ),
+        );
+
+      case 3:
+        return KeyedSubtree(
+          key: const ValueKey('community'),
+          child: CommunityScreen(
+            appState: appState,
+          ),
+        );
+
+      case 4:
+        return KeyedSubtree(
+          key: const ValueKey('profile'),
+          child: ProfileScreen(
+            appState: appState,
+          ),
+        );
+
+      case 0:
+      default:
+        return KeyedSubtree(
+          key: const ValueKey('home'),
+          child: _buildHomePage(),
+        );
+    }
+  }
+
+  Widget _buildHomePage() {
+    return SafeArea(
+      child: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                20,
+                16,
+                20,
+                24,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+
+                  const SizedBox(height: 20),
+
+                  // FitQuest Snap
+                  _buildSnapCard(),
+
+                  const SizedBox(height: 18),
+
+                  _buildStreakCard(),
+
+                  const SizedBox(height: 18),
+
+                  _buildStepsCard(),
+
+                  const SizedBox(height: 18),
+
+                  _buildAiCoachCard(),
+
+                  const SizedBox(height: 18),
+
+                  _buildPlayerCard(),
+
+                  const SizedBox(height: 18),
+
+                  _buildQuestCard(),
+
+                  const SizedBox(height: 18),
+
+                  _buildQuizCard(),
+
+                  const SizedBox(height: 18),
+
+                  _buildQuickStats(),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1267,82 +1311,89 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       ),
     );
   }
-
   // ============================================================
   // BOTTOM NAVIGATION
   // ============================================================
 
   Widget _buildBottomNavigation() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(
-        12,
-        10,
-        12,
-        12,
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 8,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(24),
-        ),
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
-        mainAxisAlignment:
-            MainAxisAlignment.spaceAround,
         children: [
-          _NavItem(
-            icon: Icons.home_rounded,
-            label: 'Home',
-            selected: selectedIndex == 0,
-            onTap: () {
-              setState(() {
-                selectedIndex = 0;
-              });
-            },
+          Expanded(
+            child: _NavItem(
+              icon: Icons.home_rounded,
+              label: 'Home',
+              selected: selectedIndex == 0,
+              onTap: () {
+                setState(() {
+                  selectedIndex = 0;
+                });
+              },
+            ),
           ),
-
-          _NavItem(
-            icon: Icons.flash_on_rounded,
-            label: 'Quests',
-            selected: selectedIndex == 1,
-            onTap: () {
-              setState(() {
-                selectedIndex = 1;
-              });
-            },
+          Expanded(
+            child: _NavItem(
+              icon: Icons.flash_on_rounded,
+              label: 'Quests',
+              selected: selectedIndex == 1,
+              onTap: () {
+                setState(() {
+                  selectedIndex = 1;
+                });
+              },
+            ),
           ),
-
-          _NavItem(
-            icon: Icons.map_rounded,
-            label: 'FitMap',
-            selected: selectedIndex == 2,
-            onTap: () {
-              setState(() {
-                selectedIndex = 2;
-              });
-            },
+          Expanded(
+            child: _NavItem(
+              icon: Icons.map_rounded,
+              label: 'FitMap',
+              selected: selectedIndex == 2,
+              onTap: () {
+                setState(() {
+                  selectedIndex = 2;
+                });
+              },
+            ),
           ),
-
-          _NavItem(
-            icon: Icons.chat_bubble_rounded,
-            label: 'Community',
-            selected: selectedIndex == 3,
-            onTap: () {
-              setState(() {
-                selectedIndex = 3;
-              });
-            },
+          Expanded(
+            child: _NavItem(
+              icon: Icons.chat_bubble_rounded,
+              label: 'Community',
+              selected: selectedIndex == 3,
+              onTap: () {
+                setState(() {
+                  selectedIndex = 3;
+                });
+              },
+            ),
           ),
-
-          _NavItem(
-            icon: Icons.person_rounded,
-            label: 'Profile',
-            selected: selectedIndex == 4,
-            onTap: () {
-              setState(() {
-                selectedIndex = 4;
-              });
-            },
+          Expanded(
+            child: _NavItem(
+              icon: Icons.person_rounded,
+              label: 'Profile',
+              selected: selectedIndex == 4,
+              onTap: () {
+                setState(() {
+                  selectedIndex = 4;
+                });
+              },
+            ),
           ),
         ],
       ),
@@ -1351,10 +1402,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 }
 
 // ============================================================
-// NAV ITEM
+// ANIMATED NAV ITEM
 // ============================================================
 
-class _NavItem extends StatelessWidget {
+class _NavItem extends StatefulWidget {
   final IconData icon;
   final String label;
   final bool selected;
@@ -1363,46 +1414,88 @@ class _NavItem extends StatelessWidget {
   const _NavItem({
     required this.icon,
     required this.label,
+    required this.selected,
     required this.onTap,
-    this.selected = false,
   });
 
   @override
+  State<_NavItem> createState() => _NavItemState();
+}
+
+class _NavItemState extends State<_NavItem> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
+    final selected = widget.selected;
+
     return GestureDetector(
-      onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 8,
-          vertical: 4,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 23,
-              color: selected
-                  ? const Color(0xFF302B63)
-                  : Colors.black38,
-            ),
-
-            const SizedBox(height: 4),
-
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: selected
-                    ? FontWeight.w800
-                    : FontWeight.w500,
-                color: selected
-                    ? const Color(0xFF302B63)
-                    : Colors.black45,
+      onTapDown: (_) {
+        setState(() {
+          _pressed = true;
+        });
+      },
+      onTapCancel: () {
+        setState(() {
+          _pressed = false;
+        });
+      },
+      onTapUp: (_) {
+        setState(() {
+          _pressed = false;
+        });
+        widget.onTap();
+      },
+      child: AnimatedScale(
+        scale: _pressed ? 0.92 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOut,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 9,
+            vertical: 7,
+          ),
+          decoration: BoxDecoration(
+            color: selected
+                ? const Color(0xFFEDEBFF)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedScale(
+                scale: selected ? 1.08 : 1.0,
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutBack,
+                child: Icon(
+                  widget.icon,
+                  size: selected ? 24 : 22,
+                  color: selected
+                      ? const Color(0xFF302B63)
+                      : Colors.black38,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                style: TextStyle(
+                  fontSize: selected ? 10.5 : 9.5,
+                  fontWeight: selected
+                      ? FontWeight.w900
+                      : FontWeight.w700,
+                  color: selected
+                      ? const Color(0xFF302B63)
+                      : Colors.black38,
+                ),
+                child: Text(widget.label),
+              ),
+            ],
+          ),
         ),
       ),
     );
