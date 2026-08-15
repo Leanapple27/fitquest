@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../theme/theme.dart';
+
 import '../app_state.dart';
 import 'rewards_screen.dart';
 import 'privacy_safety_screen.dart';
@@ -20,7 +22,8 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
   String profileName = 'Student';
   String schoolId = '';
   String house = 'Phoenix';
@@ -98,13 +101,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         final incomingXp = userXp is num ? userXp.toInt() : xp;
         final incomingLevel = (incomingXp ~/ 250) + 1;
 
-        final storedLastSeenLevel =
-            data['lastSeenLevel'] is num
-                ? (data['lastSeenLevel'] as num).toInt()
-                : null;
+        final storedLastSeenLevel = data['lastSeenLevel'] is num
+            ? (data['lastSeenLevel'] as num).toInt()
+            : null;
 
-        final previousLevel =
-            storedLastSeenLevel ?? _lastKnownLevel;
+        final previousLevel = storedLastSeenLevel ?? _lastKnownLevel;
 
         setState(() {
           if (name is String && name.trim().isNotEmpty) {
@@ -152,14 +153,10 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         });
 
         final shouldCelebrate =
-            previousLevel != null &&
-            incomingLevel > previousLevel;
+            previousLevel != null && incomingLevel > previousLevel;
 
         // Remember the level already seen so the celebration is shown once.
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .set(
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set(
           {
             'lastSeenLevel': incomingLevel,
           },
@@ -182,17 +179,8 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
       appBar: AppBar(
-        title: const Text(
-          'Profile',
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-            color: Color(0xFF151B3D),
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        title: const Text('Profile'),
       ),
       body: Stack(
         children: [
@@ -200,16 +188,13 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             onRefresh: _loadProfile,
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
+              padding: const EdgeInsets.fromLTRB(FqSpacing.page,
+                  FqSpacing.pageTop, FqSpacing.page, FqSpacing.pageBottom),
               children: [
                 _buildProfileHeader(),
-
                 const SizedBox(height: 18),
-
                 _buildStats(),
-
                 const SizedBox(height: 18),
-
                 _buildSection(
                   title: 'REWARDS',
                   children: [
@@ -251,9 +236,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 18),
-
                 _buildSection(
                   title: 'PRIVACY & SAFETY',
                   children: [
@@ -265,8 +248,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                const PrivacySafetyScreen(),
+                            builder: (context) => const PrivacySafetyScreen(),
                           ),
                         );
                       },
@@ -279,26 +261,22 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                const PrivacySafetyScreen(),
+                            builder: (context) => const PrivacySafetyScreen(),
                           ),
                         );
                       },
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 18),
-
                 _buildSection(
                   title: 'ACCOUNT',
                   children: [
                     _buildMenuItem(
                       icon: '🏫',
                       title: 'School Account',
-                      subtitle: schoolId.isEmpty
-                          ? 'School ID not set'
-                          : schoolId,
+                      subtitle:
+                          schoolId.isEmpty ? 'School ID not set' : schoolId,
                       onTap: () {},
                     ),
                     _buildMenuItem(
@@ -316,18 +294,16 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 24),
-
                 SizedBox(
                   width: double.infinity,
                   height: 50,
                   child: OutlinedButton(
                     onPressed: _logout,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFD94B4B),
+                      foregroundColor: FqColors.danger,
                       side: const BorderSide(
-                        color: Color(0xFFD94B4B),
+                        color: FqColors.danger,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15),
@@ -371,11 +347,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   height: 180 + (170 * value),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFFFFD166)
-                        .withValues(alpha: 0.04 * (1 - value)),
+                    color:
+                        FqColors.accent.withValues(alpha: 0.04 * (1 - value)),
                     border: Border.all(
-                      color: const Color(0xFFFFD166)
-                          .withValues(alpha: 0.24 * (1 - value)),
+                      color:
+                          FqColors.accent.withValues(alpha: 0.24 * (1 - value)),
                       width: 2,
                     ),
                   ),
@@ -386,8 +362,14 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             // Sparkles around the reward card.
             ...List.generate(8, (index) {
               final angles = <double>[
-                -2.8, -2.15, -1.45, -0.65,
-                0.05, 0.75, 1.55, 2.35,
+                -2.8,
+                -2.15,
+                -1.45,
+                -0.65,
+                0.05,
+                0.75,
+                1.55,
+                2.35,
               ];
 
               return TweenAnimationBuilder<double>(
@@ -414,9 +396,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   index.isEven
                       ? Icons.auto_awesome_rounded
                       : Icons.star_rounded,
-                  color: index.isEven
-                      ? const Color(0xFFFFD166)
-                      : Colors.white,
+                  color: index.isEven ? FqColors.accent : Colors.white,
                   size: index.isEven ? 22 : 15,
                 ),
               );
@@ -440,13 +420,12 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
-                    color: const Color(0xFFFFD166),
+                    color: FqColors.accent,
                     width: 2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFFD166)
-                          .withValues(alpha: 0.30),
+                      color: FqColors.accent.withValues(alpha: 0.30),
                       blurRadius: 40,
                       spreadRadius: 5,
                     ),
@@ -476,9 +455,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         height: 108,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: const Color(0xFFEDEBFF),
+                          color: FqColors.lavender,
                           border: Border.all(
-                            color: const Color(0xFFFFD166),
+                            color: FqColors.accent,
                             width: 5,
                           ),
                         ),
@@ -490,33 +469,27 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 5),
-
                     const Text(
                       'LEVEL UP!',
                       style: TextStyle(
-                        color: Color(0xFF302B63),
+                        color: FqColors.primary,
                         fontSize: 29,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.2,
                       ),
                     ),
-
                     const SizedBox(height: 4),
-
                     Text(
                       'LEVEL $level',
                       style: const TextStyle(
-                        color: Color(0xFFFF8A3D),
+                        color: FqColors.energy,
                         fontSize: 13,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.3,
                       ),
                     ),
-
                     const SizedBox(height: 16),
-
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
@@ -524,7 +497,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         vertical: 13,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF7F6FF),
+                        color: FqColors.lavender,
                         borderRadius: BorderRadius.circular(17),
                       ),
                       child: Column(
@@ -543,7 +516,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                             _levelUpReward,
                             textAlign: TextAlign.center,
                             style: const TextStyle(
-                              color: Color(0xFF151B3D),
+                              color: FqColors.ink,
                               fontSize: 17,
                               fontWeight: FontWeight.w900,
                             ),
@@ -551,9 +524,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 17),
-
                     Row(
                       children: [
                         Expanded(
@@ -565,9 +536,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                               });
                             },
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF302B63),
+                              foregroundColor: FqColors.primary,
                               side: const BorderSide(
-                                color: Color(0xFF302B63),
+                                color: FqColors.primary,
                               ),
                               padding: const EdgeInsets.symmetric(
                                 vertical: 13,
@@ -596,7 +567,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                               });
                             },
                             style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF302B63),
+                              backgroundColor: FqColors.primary,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(
                                 vertical: 13,
@@ -626,7 +597,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     );
   }
 
-
   void _showLevelUpCelebration(int level) {
     final reward = switch (level) {
       2 => 'Runner Outfit Unlocked',
@@ -653,8 +623,8 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     final level = (xp ~/ 250) + 1;
     final levelStart = (level - 1) * 250;
     final nextLevel = level * 250;
-    final progress = ((xp - levelStart) / (nextLevel - levelStart))
-        .clamp(0.0, 1.0);
+    final progress =
+        ((xp - levelStart) / (nextLevel - levelStart)).clamp(0.0, 1.0);
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.94, end: 1.0),
@@ -670,15 +640,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         width: double.infinity,
         padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
         decoration: BoxDecoration(
-          color: const Color(0xFF302B63),
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF302B63).withValues(alpha: 0.20),
-              blurRadius: 24,
-              offset: const Offset(0, 10),
-            ),
-          ],
+          color: FqColors.primary,
+          borderRadius: FqRadii.sheetBorder,
+          boxShadow: FqShadows.heroBrand(),
         ),
         child: Column(
           children: [
@@ -699,9 +663,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        loading
-                            ? 'LOADING...'
-                            : profileName.toUpperCase(),
+                        loading ? 'LOADING...' : profileName.toUpperCase(),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -726,9 +688,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 _levelBadge(level),
               ],
             ),
-
             const SizedBox(height: 14),
-
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -765,9 +725,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 ),
               ],
             ),
-
             const SizedBox(height: 14),
-
             Row(
               children: [
                 Expanded(
@@ -785,18 +743,16 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                       ? 'LEVEL UP!'
                       : '${(nextLevel - xp).clamp(0, nextLevel)} XP TO GO',
                   style: const TextStyle(
-                    color: Color(0xFFFFD166),
+                    color: FqColors.accent,
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
               ],
             ),
-
             const SizedBox(height: 7),
-
             ClipRRect(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: FqRadii.cardBorder,
               child: TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0.0, end: progress),
                 duration: const Duration(milliseconds: 800),
@@ -807,15 +763,13 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                     minHeight: 9,
                     backgroundColor: Colors.white.withValues(alpha: 0.12),
                     valueColor: const AlwaysStoppedAnimation<Color>(
-                      Color(0xFFFFD166),
+                      FqColors.accent,
                     ),
                   );
                 },
               ),
             ),
-
             const SizedBox(height: 14),
-
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
@@ -830,13 +784,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                       : Icons.auto_awesome_rounded,
                 ),
                 label: Text(
-                  showAvatarEditor
-                      ? 'CLOSE AVATAR'
-                      : 'CUSTOMIZE AVATAR',
+                  showAvatarEditor ? 'CLOSE AVATAR' : 'CUSTOMIZE AVATAR',
                 ),
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xFF302B63),
+                  foregroundColor: FqColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
@@ -848,7 +800,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 ),
               ),
             ),
-
             AnimatedCrossFade(
               firstChild: const SizedBox.shrink(),
               secondChild: Padding(
@@ -862,9 +813,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
               firstCurve: Curves.easeOut,
               secondCurve: Curves.easeOutCubic,
             ),
-
-            const SizedBox(height: 10),
-
+            const SizedBox(height: FqSpacing.label),
             GestureDetector(
               onTap: _showAvatarCollection,
               child: Container(
@@ -880,7 +829,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   children: [
                     Icon(
                       Icons.inventory_2_rounded,
-                      color: Color(0xFFFFD166),
+                      color: FqColors.accent,
                       size: 18,
                     ),
                     SizedBox(width: 9),
@@ -927,11 +876,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           vertical: 8,
         ),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFD166),
+          color: FqColors.accent,
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFFD166).withValues(alpha: 0.25),
+              color: FqColors.accent.withValues(alpha: 0.25),
               blurRadius: 12,
             ),
           ],
@@ -939,7 +888,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         child: Text(
           'LV $level',
           style: const TextStyle(
-            color: Color(0xFF302B63),
+            color: FqColors.primary,
             fontWeight: FontWeight.w900,
             fontSize: 12,
           ),
@@ -965,7 +914,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           child: Icon(
             icon,
             size: 17,
-            color: const Color(0xFFFFD166),
+            color: FqColors.accent,
           ),
         ),
         const SizedBox(width: 8),
@@ -999,7 +948,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     required double size,
   }) {
     final frameColor = selectedFrame == 'gold'
-        ? const Color(0xFFFFD166)
+        ? FqColors.accent
         : selectedFrame == 'silver'
             ? const Color(0xFFD9E2F2)
             : const Color(0xFFB87842);
@@ -1047,7 +996,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   ],
                 ),
               ),
-
             Positioned(
               bottom: 4,
               child: Container(
@@ -1059,7 +1007,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 ),
               ),
             ),
-
             Positioned(
               bottom: 8,
               child: _AvatarCharacter(
@@ -1067,7 +1014,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 level: level,
               ),
             ),
-
             if (_avatarCelebrating)
               Positioned(
                 top: 2,
@@ -1084,12 +1030,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   },
                   child: const Icon(
                     Icons.auto_awesome_rounded,
-                    color: Color(0xFFFFD166),
+                    color: FqColors.accent,
                     size: 24,
                   ),
                 ),
               ),
-
             if (selectedBanner == 'fitness')
               Positioned(
                 bottom: 0,
@@ -1105,7 +1050,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   child: const Text(
                     'FITNESS EXPLORER',
                     style: TextStyle(
-                      color: Color(0xFF302B63),
+                      color: FqColors.primary,
                       fontSize: 7,
                       fontWeight: FontWeight.w900,
                     ),
@@ -1154,7 +1099,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: avatarTab == index
-                            ? const Color(0xFF302B63)
+                            ? FqColors.primary
                             : Colors.white70,
                         fontSize: 9,
                         fontWeight: FontWeight.w900,
@@ -1285,12 +1230,12 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
               color: isSelected
-                  ? const Color(0xFFEDEBFF)
+                  ? FqColors.lavender
                   : Colors.white.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: FqRadii.chipBorder,
               border: Border.all(
                 color: isSelected
-                    ? const Color(0xFFFFD166)
+                    ? FqColors.accent
                     : Colors.white.withValues(alpha: 0.08),
                 width: isSelected ? 1.5 : 1,
               ),
@@ -1306,7 +1251,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         color: locked
                             ? Colors.white30
                             : isSelected
-                                ? const Color(0xFF302B63)
+                                ? FqColors.primary
                                 : Colors.white70,
                         size: 23,
                       ),
@@ -1316,9 +1261,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: locked
-                              ? Colors.white30
-                              : Colors.white,
+                          color: locked ? Colors.white30 : Colors.white,
                           fontSize: 8,
                           fontWeight: FontWeight.w800,
                         ),
@@ -1328,8 +1271,8 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         locked ? 'LV $unlockLevel' : 'UNLOCKED',
                         style: TextStyle(
                           color: locked
-                              ? const Color(0xFFFFD166)
-                              : const Color(0xFF7DE2A8),
+                              ? FqColors.accent
+                              : FqColors.successSurface,
                           fontSize: 7,
                           fontWeight: FontWeight.w900,
                         ),
@@ -1377,13 +1320,10 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       }
 
       if (updates.isNotEmpty) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .set(
-          updates,
-          SetOptions(merge: true),
-        );
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set(
+              updates,
+              SetOptions(merge: true),
+            );
       }
     } catch (_) {
       // Keep the UI responsive even if saving is temporarily unavailable.
@@ -1417,9 +1357,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       builder: (sheetContext) {
         return Container(
           padding: const EdgeInsets.fromLTRB(18, 14, 18, 24),
-          decoration: const BoxDecoration(
-            color: Color(0xFFF5F6FA),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          decoration: BoxDecoration(
+            color: FqColors.scaffold,
+            borderRadius: FqRadii.sheetTopBorder,
           ),
           child: SafeArea(
             top: false,
@@ -1431,7 +1371,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   height: 4,
                   decoration: BoxDecoration(
                     color: Colors.black12,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: FqRadii.cardBorder,
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -1440,7 +1380,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                     Text(
                       'MY COLLECTION',
                       style: TextStyle(
-                        color: Color(0xFF151B3D),
+                        color: FqColors.ink,
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
                       ),
@@ -1448,7 +1388,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                     Spacer(),
                     Icon(
                       Icons.auto_awesome_rounded,
-                      color: Color(0xFFFFB82E),
+                      color: FqColors.accent,
                     ),
                   ],
                 ),
@@ -1480,7 +1420,12 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 _collectionSection(
                   title: 'BANNERS',
                   items: [
-                    ('Fitness', 'fitness', 1, Icons.local_fire_department_rounded),
+                    (
+                      'Fitness',
+                      'fitness',
+                      1,
+                      Icons.local_fire_department_rounded
+                    ),
                     ('Streak', 'streak', 3, Icons.bolt_rounded),
                     ('Quest Master', 'quest', 5, Icons.emoji_events_rounded),
                   ],
@@ -1530,11 +1475,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 width: 88,
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: equipped ? const Color(0xFFEDEBFF) : Colors.white,
+                  color: equipped ? FqColors.lavender : Colors.white,
                   borderRadius: BorderRadius.circular(15),
                   border: Border.all(
                     color: equipped
-                        ? const Color(0xFFFFD166)
+                        ? FqColors.accent
                         : Colors.black.withValues(alpha: 0.05),
                     width: equipped ? 1.5 : 1,
                   ),
@@ -1545,9 +1490,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                     Icon(
                       item.$4,
                       size: 22,
-                      color: unlocked
-                          ? const Color(0xFF302B63)
-                          : Colors.black26,
+                      color: unlocked ? FqColors.primary : Colors.black26,
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -1555,9 +1498,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: unlocked
-                            ? const Color(0xFF151B3D)
-                            : Colors.black38,
+                        color: unlocked ? FqColors.ink : Colors.black38,
                         fontSize: 8,
                         fontWeight: FontWeight.w800,
                       ),
@@ -1570,9 +1511,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                               : 'LV ${item.$3}',
                       style: TextStyle(
                         color: equipped
-                            ? const Color(0xFF27733A)
+                            ? FqColors.success
                             : unlocked
-                                ? const Color(0xFF302B63)
+                                ? FqColors.primary
                                 : Colors.black26,
                         fontSize: 7,
                         fontWeight: FontWeight.w900,
@@ -1662,7 +1603,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   // PROFILE AVATAR
   // ============================================================
 
-
   Widget _buildStats() {
     return Row(
       children: [
@@ -1673,9 +1613,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             'XP',
           ),
         ),
-
         const SizedBox(width: 10),
-
         Expanded(
           child: _statCard(
             '🔥',
@@ -1683,9 +1621,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             'Day Streak',
           ),
         ),
-
         const SizedBox(width: 10),
-
         Expanded(
           child: _statCard(
             '🏆',
@@ -1717,20 +1653,16 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             emoji,
             style: const TextStyle(fontSize: 22),
           ),
-
           const SizedBox(height: 7),
-
           Text(
             value,
             style: const TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF151B3D),
+              color: FqColors.ink,
             ),
           ),
-
           const SizedBox(height: 2),
-
           Text(
             label,
             textAlign: TextAlign.center,
@@ -1761,9 +1693,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             color: Colors.black45,
           ),
         ),
-
         const SizedBox(height: 9),
-
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -1793,7 +1723,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         width: 42,
         height: 42,
         decoration: BoxDecoration(
-          color: const Color(0xFFEDEBFF),
+          color: FqColors.lavender,
           borderRadius: BorderRadius.circular(13),
         ),
         child: Center(
@@ -1807,7 +1737,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         title,
         style: const TextStyle(
           fontWeight: FontWeight.w800,
-          color: Color(0xFF151B3D),
+          color: FqColors.ink,
         ),
       ),
       subtitle: Text(
@@ -1854,9 +1784,8 @@ class _AvatarCharacter extends StatelessWidget {
                 ? const Color(0xFFFF7043)
                 : const Color(0xFF3C79E8);
 
-    final accent = outfit == 'cricket'
-        ? const Color(0xFF2F72D6)
-        : const Color(0xFFFFD166);
+    final accent =
+        outfit == 'cricket' ? const Color(0xFF2F72D6) : FqColors.accent;
 
     return SizedBox(
       width: 86,
@@ -1899,7 +1828,7 @@ class _AvatarCharacter extends StatelessWidget {
                       height: 4,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: Color(0xFF302B63),
+                          color: FqColors.primary,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -1913,7 +1842,7 @@ class _AvatarCharacter extends StatelessWidget {
                       height: 4,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: Color(0xFF302B63),
+                          color: FqColors.primary,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -1939,7 +1868,6 @@ class _AvatarCharacter extends StatelessWidget {
               ),
             ),
           ),
-
           Positioned(
             top: 47,
             child: Container(
@@ -1963,14 +1891,13 @@ class _AvatarCharacter extends StatelessWidget {
                   ),
                   child: const Icon(
                     Icons.local_fire_department_rounded,
-                    color: Color(0xFF302B63),
+                    color: FqColors.primary,
                     size: 15,
                   ),
                 ),
               ),
             ),
           ),
-
           Positioned(
             top: 57,
             left: 3,
@@ -1983,7 +1910,6 @@ class _AvatarCharacter extends StatelessWidget {
               ),
             ),
           ),
-
           Positioned(
             top: 57,
             right: 3,
@@ -1996,7 +1922,6 @@ class _AvatarCharacter extends StatelessWidget {
               ),
             ),
           ),
-
           Positioned(
             bottom: 2,
             left: 20,
@@ -2009,7 +1934,6 @@ class _AvatarCharacter extends StatelessWidget {
               ),
             ),
           ),
-
           Positioned(
             bottom: 2,
             right: 20,
@@ -2022,7 +1946,6 @@ class _AvatarCharacter extends StatelessWidget {
               ),
             ),
           ),
-
           Positioned(
             bottom: 0,
             left: 14,
@@ -2035,7 +1958,6 @@ class _AvatarCharacter extends StatelessWidget {
               ),
             ),
           ),
-
           Positioned(
             bottom: 0,
             right: 14,
@@ -2048,14 +1970,13 @@ class _AvatarCharacter extends StatelessWidget {
               ),
             ),
           ),
-
           if (level >= 5)
             Positioned(
               top: 0,
               right: 7,
               child: Icon(
                 Icons.auto_awesome_rounded,
-                color: const Color(0xFFFFD166),
+                color: FqColors.accent,
                 size: 17,
               ),
             ),

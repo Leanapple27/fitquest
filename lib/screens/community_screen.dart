@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
+import '../theme/theme.dart';
 import 'leaderboard_screen.dart';
 
 import '../app_state.dart';
@@ -43,7 +45,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
     },
   ];
 
-
   final ClanService _clanService = ClanService();
 
   String? _selectedClanId;
@@ -61,17 +62,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
-            appBar: AppBar(
-        title: const Text(
-          'Community',
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-            color: Color(0xFF151B3D),
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      appBar: AppBar(
+        title: const Text('Community'),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -90,12 +82,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFF3D6),
+                  color: FqColors.accent.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(
                   Icons.emoji_events_rounded,
-                  color: Color(0xFFFFA000),
+                  color: FqColors.energy,
                   size: 22,
                 ),
               ),
@@ -120,12 +112,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
             });
 
             return ListView(
-              padding: const EdgeInsets.fromLTRB(20, 5, 20, 30),
+              padding: const EdgeInsets.fromLTRB(
+                  FqSpacing.page, 5, FqSpacing.page, FqSpacing.pageBottom),
               children: [
                 _buildHero(),
                 const SizedBox(height: 20),
                 _sectionTitle('CLANS'),
-                const SizedBox(height: 10),
+                const SizedBox(height: FqSpacing.label),
                 _buildActionCard(
                   emoji: '🛡️',
                   title: 'Create a Clan',
@@ -133,7 +126,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   button: 'CREATE',
                   onTap: _createClan,
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: FqSpacing.label),
                 _buildActionCard(
                   emoji: '🌎',
                   title: 'Discover Clans',
@@ -164,9 +157,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
                       ),
                     ),
                 ],
-                const SizedBox(height: 22),
+                const SizedBox(height: FqSpacing.section),
                 _sectionTitle('HOW CLANS WORK'),
-                const SizedBox(height: 10),
+                const SizedBox(height: FqSpacing.label),
                 _buildFeature(
                   '💬',
                   'Live Clan Chat',
@@ -200,7 +193,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF302B63), Color(0xFF51489A)],
+          colors: FqColors.heroGradient,
         ),
         borderRadius: BorderRadius.circular(27),
       ),
@@ -226,7 +219,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               fontWeight: FontWeight.w900,
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: FqSpacing.label),
           Text(
             'Chat, challenge other clans and climb the weekly leaderboard.',
             style: TextStyle(
@@ -262,7 +255,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: FqColors.surface,
         borderRadius: BorderRadius.circular(19),
       ),
       child: Row(
@@ -276,7 +269,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 Text(
                   title,
                   style: const TextStyle(
-                    color: Color(0xFF151B3D),
+                    color: FqColors.ink,
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
                   ),
@@ -313,9 +306,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
     final data = doc.data();
     final emoji = data['emoji']?.toString() ?? '🛡️';
     final name = data['name']?.toString() ?? 'Clan';
-    final xp = data['weeklyXp'] is num
-        ? (data['weeklyXp'] as num).toInt()
-        : 0;
+    final xp = data['weeklyXp'] is num ? (data['weeklyXp'] as num).toInt() : 0;
 
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: _clanService.streamMembers(doc.id),
@@ -335,7 +326,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEDEBFF),
+                  color: FqColors.lavender,
                   borderRadius: BorderRadius.circular(15),
                 ),
                 child: Center(
@@ -353,7 +344,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     Text(
                       name,
                       style: const TextStyle(
-                        color: Color(0xFF151B3D),
+                        color: FqColors.ink,
                         fontSize: 13,
                         fontWeight: FontWeight.w900,
                       ),
@@ -373,7 +364,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               IconButton(
                 onPressed: () => _joinClan(doc.id),
                 icon: const Icon(Icons.arrow_forward_rounded),
-                color: const Color(0xFF302B63),
+                color: FqColors.primary,
               ),
             ],
           ),
@@ -401,7 +392,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 Text(
                   title,
                   style: const TextStyle(
-                    color: Color(0xFF151B3D),
+                    color: FqColors.ink,
                     fontSize: 12,
                     fontWeight: FontWeight.w900,
                   ),
@@ -424,10 +415,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   Widget _firestoreError(Object? error) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(FqSpacing.card),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF1F0),
-        borderRadius: BorderRadius.circular(20),
+        color: FqColors.dangerSurface,
+        borderRadius: FqRadii.cardBorder,
       ),
       child: Column(
         children: [
@@ -436,7 +427,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           const Text(
             'Could not load public clans',
             style: TextStyle(
-              color: Color(0xFF8F2D2D),
+              color: FqColors.danger,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -459,7 +450,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: FqRadii.cardBorder,
       ),
       child: const Column(
         children: [
@@ -469,7 +460,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
             'No public clans yet',
             style: TextStyle(
               fontWeight: FontWeight.w900,
-              color: Color(0xFF151B3D),
+              color: FqColors.ink,
             ),
           ),
           SizedBox(height: 4),
@@ -629,12 +620,10 @@ class _ClanScreenState extends State<_ClanScreen>
         final data = clanSnapshot.data?.data() ?? {};
         final name = data['name']?.toString() ?? 'Clan';
         final emoji = data['emoji']?.toString() ?? '🛡️';
-        final weeklyXp = data['weeklyXp'] is num
-            ? (data['weeklyXp'] as num).toInt()
-            : 0;
+        final weeklyXp =
+            data['weeklyXp'] is num ? (data['weeklyXp'] as num).toInt() : 0;
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF5F6FA),
           appBar: AppBar(
             leading: IconButton(
               onPressed: widget.onBack,
@@ -648,33 +637,25 @@ class _ClanScreenState extends State<_ClanScreen>
                   child: Text(
                     name,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Color(0xFF151B3D),
-                      fontWeight: FontWeight.w900,
-                    ),
+                    style: FqTypography.screenTitle().copyWith(fontSize: 18),
                   ),
                 ),
               ],
             ),
-            backgroundColor: Colors.transparent,
-            elevation: 0,
           ),
           body: Column(
             children: [
               StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                 stream: widget.clanService.streamMembers(widget.clanId),
                 builder: (context, memberSnapshot) {
-                  final realMembers =
-                      memberSnapshot.data?.docs.length ?? 0;
-                  final totalMembers =
-                      realMembers + _demoMembers.length;
+                  final realMembers = memberSnapshot.data?.docs.length ?? 0;
+                  final totalMembers = realMembers + _demoMembers.length;
 
                   final realXp = memberSnapshot.data?.docs.fold<int>(
                         0,
                         (sum, doc) {
                           final value = doc.data()['weeklyXp'];
-                          return sum +
-                              (value is num ? value.toInt() : 0);
+                          return sum + (value is num ? value.toInt() : 0);
                         },
                       ) ??
                       weeklyXp;
@@ -718,9 +699,9 @@ class _ClanScreenState extends State<_ClanScreen>
               ),
               TabBar(
                 controller: _tabController,
-                labelColor: const Color(0xFF302B63),
+                labelColor: FqColors.primary,
                 unselectedLabelColor: Colors.black45,
-                indicatorColor: const Color(0xFFFFD166),
+                indicatorColor: FqColors.accent,
                 tabs: const [
                   Tab(text: 'CHAT'),
                   Tab(text: 'MEMBERS'),
@@ -752,7 +733,7 @@ class _ClanScreenState extends State<_ClanScreen>
         Text(
           value,
           style: const TextStyle(
-            color: Color(0xFF151B3D),
+            color: FqColors.ink,
             fontSize: 12,
             fontWeight: FontWeight.w900,
           ),
@@ -821,17 +802,13 @@ class _ClanScreenState extends State<_ClanScreen>
     String reply;
     String senderName;
 
-    if (text.contains('hi') ||
-        text.contains('hello') ||
-        text.contains('hey')) {
+    if (text.contains('hi') || text.contains('hello') || text.contains('hey')) {
       senderName = 'Arjun 🏃 · Demo';
       reply = 'Hey! Welcome to the clan 👋 Let’s smash this week!';
-    } else if (text.contains('war') ||
-        text.contains('challenge')) {
+    } else if (text.contains('war') || text.contains('challenge')) {
       senderName = 'Maya 🧘 · Demo';
       reply = 'Clan War is on! 🔥 Everyone’s contribution counts.';
-    } else if (text.contains('workout') ||
-        text.contains('gym')) {
+    } else if (text.contains('workout') || text.contains('gym')) {
       senderName = 'Kabir 🏋️ · Demo';
       reply = 'Nice! 💪 I’m doing my workout too. Let’s push the clan up!';
     } else {
@@ -897,8 +874,8 @@ class _ClanScreenState extends State<_ClanScreen>
                   final senderName =
                       data['senderName']?.toString() ?? 'Student';
                   final text = data['text']?.toString() ?? '';
-                  final isMe = senderId ==
-                      FirebaseAuth.instance.currentUser?.uid;
+                  final isMe =
+                      senderId == FirebaseAuth.instance.currentUser?.uid;
 
                   final timestamp = data['createdAt'];
                   final time = timestamp is Timestamp
@@ -913,9 +890,7 @@ class _ClanScreenState extends State<_ClanScreen>
                       margin: const EdgeInsets.only(bottom: 9),
                       padding: const EdgeInsets.fromLTRB(13, 10, 13, 9),
                       decoration: BoxDecoration(
-                        color: isMe
-                            ? const Color(0xFF302B63)
-                            : Colors.white,
+                        color: isMe ? FqColors.primary : Colors.white,
                         borderRadius: BorderRadius.circular(17),
                       ),
                       child: Column(
@@ -925,7 +900,7 @@ class _ClanScreenState extends State<_ClanScreen>
                             Text(
                               senderName,
                               style: const TextStyle(
-                                color: Color(0xFF51489A),
+                                color: FqColors.primaryMid,
                                 fontSize: 9,
                                 fontWeight: FontWeight.w900,
                               ),
@@ -934,7 +909,7 @@ class _ClanScreenState extends State<_ClanScreen>
                           Text(
                             text,
                             style: TextStyle(
-                              color: isMe ? Colors.white : const Color(0xFF151B3D),
+                              color: isMe ? Colors.white : FqColors.ink,
                               fontSize: 12,
                               height: 1.3,
                               fontWeight: FontWeight.w600,
@@ -945,9 +920,7 @@ class _ClanScreenState extends State<_ClanScreen>
                             Text(
                               time,
                               style: TextStyle(
-                                color: isMe
-                                    ? Colors.white54
-                                    : Colors.black38,
+                                color: isMe ? Colors.white54 : Colors.black38,
                                 fontSize: 8,
                               ),
                             ),
@@ -980,7 +953,7 @@ class _ClanScreenState extends State<_ClanScreen>
                       hintText: 'Message your clan...',
                       counterText: '',
                       filled: true,
-                      fillColor: const Color(0xFFF5F6FA),
+                      fillColor: FqColors.scaffold,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(17),
                         borderSide: BorderSide.none,
@@ -992,7 +965,7 @@ class _ClanScreenState extends State<_ClanScreen>
                 IconButton.filled(
                   onPressed: _sendMessage,
                   style: IconButton.styleFrom(
-                    backgroundColor: const Color(0xFF302B63),
+                    backgroundColor: FqColors.primary,
                     foregroundColor: Colors.white,
                   ),
                   icon: const Icon(Icons.send_rounded),
@@ -1021,9 +994,8 @@ class _ClanScreenState extends State<_ClanScreen>
           final data = doc.data();
           final name = data['name']?.toString() ?? 'Student';
           final role = data['role']?.toString() ?? 'member';
-          final xp = data['weeklyXp'] is num
-              ? (data['weeklyXp'] as num).toInt()
-              : 0;
+          final xp =
+              data['weeklyXp'] is num ? (data['weeklyXp'] as num).toInt() : 0;
 
           final emoji = role == 'owner'
               ? '👑'
@@ -1100,7 +1072,7 @@ class _ClanScreenState extends State<_ClanScreen>
                         name,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: Color(0xFF151B3D),
+                          color: FqColors.ink,
                           fontSize: 12,
                           fontWeight: FontWeight.w900,
                         ),
@@ -1114,13 +1086,13 @@ class _ClanScreenState extends State<_ClanScreen>
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEDEBFF),
+                          color: FqColors.lavender,
                           borderRadius: BorderRadius.circular(5),
                         ),
                         child: const Text(
                           'DEMO',
                           style: TextStyle(
-                            color: Color(0xFF51489A),
+                            color: FqColors.primaryMid,
                             fontSize: 6,
                             fontWeight: FontWeight.w900,
                           ),
@@ -1145,7 +1117,7 @@ class _ClanScreenState extends State<_ClanScreen>
           Text(
             '$xp XP',
             style: const TextStyle(
-              color: Color(0xFF51489A),
+              color: FqColors.primaryMid,
               fontSize: 10,
               fontWeight: FontWeight.w900,
             ),
@@ -1169,9 +1141,9 @@ class _ClanScreenState extends State<_ClanScreen>
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF302B63), Color(0xFF51489A)],
+                colors: FqColors.heroGradient,
               ),
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: FqRadii.heroBorder,
             ),
             child: Column(
               children: [
@@ -1223,12 +1195,10 @@ class _ClanScreenState extends State<_ClanScreen>
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: .12),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: FqRadii.chipBorder,
                   ),
                   child: Text(
-                    myClanWins
-                        ? '🔥 YOUR CLAN IS LEADING'
-                        : '💪 KEEP PUSHING',
+                    myClanWins ? '🔥 YOUR CLAN IS LEADING' : '💪 KEEP PUSHING',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 9,
@@ -1268,7 +1238,7 @@ class _ClanScreenState extends State<_ClanScreen>
                       Text(
                         '${_myWarPoints()} war points',
                         style: const TextStyle(
-                          color: Color(0xFF151B3D),
+                          color: FqColors.ink,
                           fontSize: 13,
                           fontWeight: FontWeight.w900,
                         ),
@@ -1279,7 +1249,7 @@ class _ClanScreenState extends State<_ClanScreen>
                 const Text(
                   'LIVE',
                   style: TextStyle(
-                    color: Color(0xFF51489A),
+                    color: FqColors.primaryMid,
                     fontSize: 8,
                     fontWeight: FontWeight.w900,
                   ),
@@ -1339,7 +1309,7 @@ class _ClanScreenState extends State<_ClanScreen>
         Text(
           '$score',
           style: TextStyle(
-            color: winning ? const Color(0xFFFFD166) : Colors.white,
+            color: winning ? FqColors.accent : Colors.white,
             fontSize: 25,
             fontWeight: FontWeight.w900,
           ),
@@ -1348,7 +1318,7 @@ class _ClanScreenState extends State<_ClanScreen>
           const Text(
             'LEADING',
             style: TextStyle(
-              color: Color(0xFFFFD166),
+              color: FqColors.accent,
               fontSize: 7,
               fontWeight: FontWeight.w900,
             ),
@@ -1377,7 +1347,7 @@ class _ClanScreenState extends State<_ClanScreen>
                 Text(
                   title,
                   style: const TextStyle(
-                    color: Color(0xFF151B3D),
+                    color: FqColors.ink,
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
                   ),

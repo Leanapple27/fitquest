@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/theme.dart';
+
 class LeaderboardScreen extends StatefulWidget {
   final String currentUserName;
   final int currentUserXp;
@@ -37,9 +39,16 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   List<_User> get _xpBoard {
     final list = [
       ..._users,
-      _User('me', widget.currentUserName, '@you', '🧑‍🎓',
-          widget.currentUserXp, widget.currentUserGrowth, 7,
-          (widget.currentUserXp ~/ 250) + 1, 'Keep moving.'),
+      _User(
+          'me',
+          widget.currentUserName,
+          '@you',
+          '🧑‍🎓',
+          widget.currentUserXp,
+          widget.currentUserGrowth,
+          7,
+          (widget.currentUserXp ~/ 250) + 1,
+          'Keep moving.'),
     ];
     list.sort((a, b) => b.xp.compareTo(a.xp));
     return list;
@@ -48,9 +57,16 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   List<_User> get _growthBoard {
     final list = [
       ..._users,
-      _User('me', widget.currentUserName, '@you', '🧑‍🎓',
-          widget.currentUserXp, widget.currentUserGrowth, 7,
-          (widget.currentUserXp ~/ 250) + 1, 'Keep moving.'),
+      _User(
+          'me',
+          widget.currentUserName,
+          '@you',
+          '🧑‍🎓',
+          widget.currentUserXp,
+          widget.currentUserGrowth,
+          7,
+          (widget.currentUserXp ~/ 250) + 1,
+          'Keep moving.'),
     ];
     list.sort((a, b) => b.growth.compareTo(a.growth));
     return list;
@@ -65,13 +81,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     final growthRank = _rank('me', _growthBoard);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF5F6FA),
-        elevation: 0,
-        foregroundColor: const Color(0xFF151B3D),
-        title: const Text('Leaderboard',
-            style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text('Leaderboard'),
       ),
       body: DefaultTabController(
         length: 2,
@@ -83,16 +94,16 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                color: FqColors.surface,
+                borderRadius: FqRadii.buttonBorder,
               ),
-              child: const TabBar(
+              child: TabBar(
                 dividerColor: Colors.transparent,
                 indicator: BoxDecoration(
-                  color: Color(0xFFEDEBFF),
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  color: FqColors.lavender,
+                  borderRadius: FqRadii.chipBorder,
                 ),
-                labelColor: Color(0xFF302B63),
+                labelColor: FqColors.primary,
                 unselectedLabelColor: Colors.black45,
                 labelStyle:
                     TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
@@ -102,7 +113,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: FqSpacing.label),
             SizedBox(
               height: 530,
               child: TabBarView(
@@ -120,12 +131,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
   Widget _hero(int xpRank, int growthRank) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(FqSpacing.card),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF302B63), Color(0xFF5149A6)],
+          colors: FqColors.heroGradient,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: FqRadii.heroBorder,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,7 +176,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           borderRadius: BorderRadius.circular(15),
         ),
         child: Row(children: [
-          Icon(icon, color: const Color(0xFFFFD166), size: 20),
+          Icon(icon, color: FqColors.accent, size: 20),
           const SizedBox(width: 7),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(title,
@@ -198,7 +209,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           child: Container(
             padding: const EdgeInsets.all(11),
             decoration: BoxDecoration(
-              color: me ? const Color(0xFFEDEBFF) : Colors.white,
+              color: me ? FqColors.lavender : FqColors.surface,
               borderRadius: BorderRadius.circular(18),
             ),
             child: Row(children: [
@@ -218,7 +229,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 height: 43,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF5F6FA),
+                  color: FqColors.scaffold,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(u.avatar, style: const TextStyle(fontSize: 22)),
@@ -228,36 +239,34 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                  Row(children: [
-                    Flexible(
-                      child: Text(u.name,
-                          overflow: TextOverflow.ellipsis,
+                      Row(children: [
+                        Flexible(
+                          child: Text(u.name,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  color: FqColors.ink,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w900)),
+                        ),
+                        if (me)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 5),
+                            child: Text('YOU',
+                                style: TextStyle(
+                                    color: FqColors.primary,
+                                    fontSize: 7,
+                                    fontWeight: FontWeight.w900)),
+                          ),
+                      ]),
+                      Text(u.handle,
                           style: const TextStyle(
-                              color: Color(0xFF151B3D),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w900)),
-                    ),
-                    if (me)
-                      const Padding(
-                        padding: EdgeInsets.only(left: 5),
-                        child: Text('YOU',
-                            style: TextStyle(
-                                color: Color(0xFF302B63),
-                                fontSize: 7,
-                                fontWeight: FontWeight.w900)),
-                      ),
-                  ]),
-                  Text(u.handle,
-                      style:
-                          const TextStyle(color: Colors.black38, fontSize: 9)),
-                ]),
+                              color: Colors.black38, fontSize: 9)),
+                    ]),
               ),
               Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 Text(growth ? '+${u.growth}%' : '${u.xp} XP',
                     style: TextStyle(
-                        color: growth
-                            ? const Color(0xFF27733A)
-                            : const Color(0xFFFF7A45),
+                        color: growth ? FqColors.success : FqColors.energy,
                         fontSize: 12,
                         fontWeight: FontWeight.w900)),
                 const SizedBox(height: 2),
@@ -282,9 +291,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       backgroundColor: Colors.transparent,
       builder: (sheet) => Container(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        decoration: BoxDecoration(
+          color: FqColors.surface,
+          borderRadius: FqRadii.sheetTopBorder,
         ),
         child: SafeArea(
           top: false,
@@ -293,14 +302,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               width: 42,
               height: 4,
               decoration: BoxDecoration(
-                  color: Colors.black12,
-                  borderRadius: BorderRadius.circular(20)),
+                  color: Colors.black12, borderRadius: FqRadii.cardBorder),
             ),
             const SizedBox(height: 16),
             Text(user.avatar, style: const TextStyle(fontSize: 48)),
             Text(user.name,
                 style: const TextStyle(
-                    color: Color(0xFF151B3D),
+                    color: FqColors.ink,
                     fontSize: 21,
                     fontWeight: FontWeight.w900)),
             Text(user.handle,
@@ -339,7 +347,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     : Icons.person_add_alt_1_rounded),
                 label: Text(sent ? 'REQUEST SENT' : 'ADD FRIEND'),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF302B63),
+                  backgroundColor: FqColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
               ),
@@ -353,13 +361,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Widget _mini(String label, String value) => Container(
         padding: const EdgeInsets.symmetric(vertical: 9),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F6FA),
+          color: FqColors.scaffold,
           borderRadius: BorderRadius.circular(13),
         ),
         child: Column(children: [
           Text(value,
               style: const TextStyle(
-                  color: Color(0xFF302B63),
+                  color: FqColors.primary,
                   fontSize: 12,
                   fontWeight: FontWeight.w900)),
           const SizedBox(height: 2),

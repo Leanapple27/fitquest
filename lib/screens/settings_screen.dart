@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../theme/theme.dart';
+
 import '../theme_controller.dart';
 import 'privacy_safety_screen.dart';
 import 'teacher_dashboard_screen.dart';
@@ -19,29 +21,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark =
-        Theme.of(context).brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Settings',
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-          ),
-        ),
+        title: const Text('Settings'),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
-          20,
-          10,
-          20,
-          30,
+          FqSpacing.page,
+          FqSpacing.label,
+          FqSpacing.page,
+          FqSpacing.pageBottom,
         ),
         children: [
           _sectionTitle('APPEARANCE'),
           const SizedBox(height: 8),
-
           _card(
             children: [
               ListTile(
@@ -67,12 +62,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-
-          const SizedBox(height: 22),
-
+          const SizedBox(height: FqSpacing.section),
           _sectionTitle('NOTIFICATIONS'),
           const SizedBox(height: 8),
-
           _card(
             children: [
               SwitchListTile(
@@ -96,7 +88,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   });
                 },
               ),
-
               SwitchListTile(
                 secondary: const Text(
                   '🤝',
@@ -120,12 +111,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-
-          const SizedBox(height: 22),
-
+          const SizedBox(height: FqSpacing.section),
           _sectionTitle('PRIVACY'),
           const SizedBox(height: 8),
-
           _card(
             children: [
               SwitchListTile(
@@ -149,7 +137,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   });
                 },
               ),
-
               ListTile(
                 leading: const Text(
                   '🛡️',
@@ -171,20 +158,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          const PrivacySafetyScreen(),
+                      builder: (_) => const PrivacySafetyScreen(),
                     ),
                   );
                 },
               ),
             ],
           ),
-
-          const SizedBox(height: 22),
-
+          const SizedBox(height: FqSpacing.section),
           _sectionTitle('ACCOUNT'),
           const SizedBox(height: 8),
-
           _card(
             children: [
               ListTile(
@@ -206,33 +189,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 onTap: _showTeacherMode,
               ),
-
               ListTile(
                 leading: const Text(
                   '🚪',
                   style: TextStyle(fontSize: 23),
                 ),
-                title: const Text(
+                title: Text(
                   'Log Out',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFFD94B4B),
-                  ),
+                  style: FqTypography.cardTitle(color: FqColors.danger),
                 ),
                 onTap: _logout,
               ),
             ],
           ),
-
           const SizedBox(height: 25),
-
           Center(
             child: Text(
               'FitQuest • Fitness for everyone',
               style: TextStyle(
-                color: isDark
-                    ? Colors.white38
-                    : Colors.black38,
+                color: isDark ? Colors.white38 : Colors.black38,
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
@@ -246,12 +221,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _sectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.w900,
-        letterSpacing: 1,
-        color: Colors.black45,
-      ),
+      style: FqTypography.sectionLabel(),
     );
   }
 
@@ -261,7 +231,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: FqRadii.cardBorder,
       ),
       child: Column(
         children: children,
@@ -292,10 +262,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               const Padding(
                 padding: EdgeInsets.fromLTRB(
-                  20,
-                  20,
-                  20,
-                  10,
+                  FqSpacing.page,
+                  FqSpacing.page,
+                  FqSpacing.page,
+                  FqSpacing.label,
                 ),
                 child: Align(
                   alignment: Alignment.centerLeft,
@@ -308,62 +278,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               ),
-
               RadioListTile<ThemeMode>(
                 title: const Text('System'),
                 subtitle: const Text(
                   'Follow your phone settings',
                 ),
                 value: ThemeMode.system,
-                groupValue:
-                    ThemeController.instance.themeMode,
+                groupValue: ThemeController.instance.themeMode,
                 onChanged: (value) {
                   if (value == null) return;
 
-                  ThemeController.instance
-                      .setThemeMode(value);
+                  ThemeController.instance.setThemeMode(value);
 
                   Navigator.pop(sheetContext);
                 },
               ),
-
               RadioListTile<ThemeMode>(
                 title: const Text('Light'),
                 subtitle: const Text(
                   'Bright FitQuest appearance',
                 ),
                 value: ThemeMode.light,
-                groupValue:
-                    ThemeController.instance.themeMode,
+                groupValue: ThemeController.instance.themeMode,
                 onChanged: (value) {
                   if (value == null) return;
 
-                  ThemeController.instance
-                      .setThemeMode(value);
+                  ThemeController.instance.setThemeMode(value);
 
                   Navigator.pop(sheetContext);
                 },
               ),
-
               RadioListTile<ThemeMode>(
                 title: const Text('Dark'),
                 subtitle: const Text(
                   'Dark FitQuest appearance',
                 ),
                 value: ThemeMode.dark,
-                groupValue:
-                    ThemeController.instance.themeMode,
+                groupValue: ThemeController.instance.themeMode,
                 onChanged: (value) {
                   if (value == null) return;
 
-                  ThemeController.instance
-                      .setThemeMode(value);
+                  ThemeController.instance.setThemeMode(value);
 
                   Navigator.pop(sheetContext);
                 },
               ),
-
-              const SizedBox(height: 10),
+              const SizedBox(height: FqSpacing.label),
             ],
           ),
         );
@@ -394,7 +354,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
               child: const Text('LATER'),
             ),
-
             FilledButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
@@ -402,8 +361,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) =>
-                        const TeacherDashboardScreen(),
+                    builder: (_) => const TeacherDashboardScreen(),
                   ),
                 );
               },

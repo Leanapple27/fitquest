@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../theme/theme.dart';
+
 import '../app_state.dart';
 import '../notification_service.dart';
 import 'ai_coach_screen.dart';
@@ -98,7 +100,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       animation: appState,
       builder: (context, child) {
         return Scaffold(
-          backgroundColor: const Color(0xFFF5F6FA),
           body: AnimatedSwitcher(
             duration: const Duration(milliseconds: 320),
             reverseDuration: const Duration(milliseconds: 220),
@@ -202,58 +203,42 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                     index: 0,
                     child: _buildHeader(),
                   ),
-
                   const SizedBox(height: 20),
-
                   _animatedHomeCard(
                     index: 1,
                     child: _buildSnapCard(),
                   ),
-
                   const SizedBox(height: 18),
-
                   _animatedHomeCard(
                     index: 2,
                     child: _buildStreakCard(),
                   ),
-
                   const SizedBox(height: 18),
-
                   _animatedHomeCard(
                     index: 3,
                     child: _buildStepsCard(),
                   ),
-
                   const SizedBox(height: 18),
-
                   _animatedHomeCard(
                     index: 4,
                     child: _buildAiCoachCard(),
                   ),
-
                   const SizedBox(height: 18),
-
                   _animatedHomeCard(
                     index: 5,
                     child: _buildPlayerCard(),
                   ),
-
                   const SizedBox(height: 18),
-
                   _animatedHomeCard(
                     index: 6,
                     child: _buildQuestCard(),
                   ),
-
                   const SizedBox(height: 18),
-
                   _animatedHomeCard(
                     index: 7,
                     child: _buildQuizCard(),
                   ),
-
                   const SizedBox(height: 18),
-
                   _animatedHomeCard(
                     index: 8,
                     child: _buildQuickStats(),
@@ -283,9 +268,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       duration: const Duration(milliseconds: 520),
       curve: Curves.easeOutCubic,
       builder: (context, value, child) {
-        final delayedValue = ((value * 1.25) -
-                (delay.inMilliseconds / 520))
-            .clamp(0.0, 1.0);
+        final delayedValue =
+            ((value * 1.25) - (delay.inMilliseconds / 520)).clamp(0.0, 1.0);
 
         return Opacity(
           opacity: delayedValue,
@@ -313,8 +297,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: const Color(0xFF302B63),
-            borderRadius: BorderRadius.circular(16),
+            color: FqColors.primary,
+            borderRadius: FqRadii.buttonBorder,
           ),
           child: Center(
             child: profileLoading
@@ -332,28 +316,22 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   ),
           ),
         ),
-
         const SizedBox(width: 12),
-
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                profileLoading
-                    ? 'Hey, Student! 👋'
-                    : 'Hey, $profileName! 👋',
+                profileLoading ? 'Hey, Student! 👋' : 'Hey, $profileName! 👋',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontSize: 21,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF151B3D),
+                  color: FqColors.ink,
                 ),
               ),
-
               const SizedBox(height: 3),
-
               Text(
                 profileSchoolId.isEmpty
                     ? 'Ready for today\'s quest?'
@@ -368,12 +346,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             ],
           ),
         ),
-
         Container(
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: FqColors.surface,
             borderRadius: BorderRadius.circular(14),
           ),
           child: IconButton(
@@ -381,7 +358,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             onPressed: _showNotificationsDialog,
             icon: const Icon(
               Icons.notifications_none_rounded,
-              color: Color(0xFF151B3D),
+              color: FqColors.ink,
             ),
           ),
         ),
@@ -405,22 +382,16 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       },
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(FqSpacing.card),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [
-              Color(0xFFFF5E62),
-              Color(0xFFFF9966),
+              FqColors.energy,
+              FqColors.energy,
             ],
           ),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 14,
-              offset: const Offset(0, 6),
-            ),
-          ],
+          borderRadius: FqRadii.heroBorder,
+          boxShadow: FqShadows.cardSoft(),
         ),
         child: Row(
           children: [
@@ -438,9 +409,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 ),
               ),
             ),
-
             const SizedBox(width: 15),
-
             const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -454,9 +423,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                       letterSpacing: 1.2,
                     ),
                   ),
-
                   SizedBox(height: 4),
-
                   Text(
                     'Show your fitness moment ✨',
                     style: TextStyle(
@@ -465,9 +432,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-
                   SizedBox(height: 3),
-
                   Text(
                     'Filters • XP • Privacy-first',
                     style: TextStyle(
@@ -478,7 +443,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 ],
               ),
             ),
-
             const Icon(
               Icons.chevron_right_rounded,
               color: Colors.white,
@@ -500,13 +464,13 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       builder: (dialogContext) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: FqRadii.heroBorder,
           ),
           title: const Row(
             children: [
               Icon(
                 Icons.notifications_rounded,
-                color: Color(0xFF302B63),
+                color: FqColors.primary,
               ),
               SizedBox(width: 10),
               Text(
@@ -525,25 +489,19 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 'Streak reminder',
                 'Keep your streak alive today!',
               ),
-
               const SizedBox(height: 14),
-
               _notificationItem(
                 '👟',
                 'Step reminder',
                 'Keep moving toward your daily goal.',
               ),
-
               const SizedBox(height: 14),
-
               _notificationItem(
                 '🎯',
                 'Quest reminder',
                 'Your daily quest is waiting.',
               ),
-
               const SizedBox(height: 18),
-
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -552,8 +510,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
                     await NotificationService.requestPermission();
 
-                    await NotificationService
-                        .showMotivationNotification();
+                    await NotificationService.showMotivationNotification();
 
                     if (!mounted) return;
 
@@ -568,7 +525,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   icon: const Icon(Icons.send_rounded),
                   label: const Text('Send Motivation'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF302B63),
+                    backgroundColor: FqColors.primary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       vertical: 14,
@@ -598,9 +555,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           emoji,
           style: const TextStyle(fontSize: 25),
         ),
-
         const SizedBox(width: 12),
-
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -609,12 +564,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 title,
                 style: const TextStyle(
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF151B3D),
+                  color: FqColors.ink,
                 ),
               ),
-
               const SizedBox(height: 3),
-
               Text(
                 message,
                 style: const TextStyle(
@@ -642,15 +595,15 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       },
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(FqSpacing.page),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [
-              Color(0xFFFF8A3D),
-              Color(0xFFFF5E62),
+              FqColors.energy,
+              FqColors.energy,
             ],
           ),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: FqRadii.heroBorder,
         ),
         child: Row(
           children: [
@@ -668,9 +621,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 ),
               ),
             ),
-
             const SizedBox(width: 16),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -684,9 +635,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                       letterSpacing: 0.7,
                     ),
                   ),
-
                   const SizedBox(height: 5),
-
                   const Text(
                     'Keep moving tomorrow!',
                     style: TextStyle(
@@ -697,7 +646,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 ],
               ),
             ),
-
             const Icon(
               Icons.chevron_right_rounded,
               color: Colors.white,
@@ -725,17 +673,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       },
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(FqSpacing.page),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 15,
-              offset: const Offset(0, 6),
-            ),
-          ],
+          color: FqColors.surface,
+          borderRadius: FqRadii.heroBorder,
+          boxShadow: FqShadows.cardSoft(),
         ),
         child: Row(
           children: [
@@ -743,7 +685,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               width: 62,
               height: 62,
               decoration: BoxDecoration(
-                color: const Color(0xFFEDEBFF),
+                color: FqColors.lavender,
                 borderRadius: BorderRadius.circular(18),
               ),
               child: const Center(
@@ -753,9 +695,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 ),
               ),
             ),
-
             const SizedBox(width: 16),
-
             const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -769,20 +709,16 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                       color: Colors.black45,
                     ),
                   ),
-
                   SizedBox(height: 5),
-
                   Text(
                     'Track your real steps',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFF151B3D),
+                      color: FqColors.ink,
                     ),
                   ),
-
                   SizedBox(height: 4),
-
                   Text(
                     'Powered by Health Connect',
                     style: TextStyle(
@@ -793,11 +729,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 ],
               ),
             ),
-
             const Icon(
               Icons.chevron_right_rounded,
               size: 30,
-              color: Color(0xFF302B63),
+              color: FqColors.primary,
             ),
           ],
         ),
@@ -821,15 +756,12 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       },
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(FqSpacing.page),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [
-              Color(0xFF302B63),
-              Color(0xFF51489A),
-            ],
+            colors: FqColors.heroGradient,
           ),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: FqRadii.heroBorder,
         ),
         child: Row(
           children: [
@@ -851,9 +783,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 ),
               ),
             ),
-
             const SizedBox(width: 16),
-
             const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -867,9 +797,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                       letterSpacing: 1,
                     ),
                   ),
-
                   SizedBox(height: 5),
-
                   Text(
                     'Your personal coach',
                     style: TextStyle(
@@ -878,9 +806,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-
                   SizedBox(height: 4),
-
                   Text(
                     'Get workouts, motivation & fitness advice',
                     style: TextStyle(
@@ -891,7 +817,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 ],
               ),
             ),
-
             const Icon(
               Icons.chevron_right_rounded,
               color: Colors.white,
@@ -915,9 +840,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     final int levelRange = nextLevelXp - currentLevelStart;
     final int xpIntoLevel = currentXp - currentLevelStart;
 
-    final double progress = levelRange <= 0
-        ? 1.0
-        : (xpIntoLevel / levelRange).clamp(0.0, 1.0);
+    final double progress =
+        levelRange <= 0 ? 1.0 : (xpIntoLevel / levelRange).clamp(0.0, 1.0);
 
     final int xpRemaining =
         nextLevelXp > currentXp ? nextLevelXp - currentXp : 0;
@@ -929,17 +853,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       builder: (context, animatedProgress, child) {
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(FqSpacing.page),
           decoration: BoxDecoration(
-            color: const Color(0xFF302B63),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF302B63).withValues(alpha: 0.18),
-                blurRadius: 22,
-                offset: const Offset(0, 10),
-              ),
-            ],
+            color: FqColors.primary,
+            borderRadius: FqRadii.heroBorder,
+            boxShadow: FqShadows.heroBrand(),
           ),
           child: child,
         );
@@ -960,7 +878,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                       color: Colors.white.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: const Color(0xFFFFD166).withValues(alpha: 0.65),
+                        color: FqColors.accent.withValues(alpha: 0.65),
                         width: 2,
                       ),
                     ),
@@ -986,17 +904,17 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFD166),
-                        borderRadius: BorderRadius.circular(12),
+                        color: FqColors.accent,
+                        borderRadius: FqRadii.chipBorder,
                         border: Border.all(
-                          color: const Color(0xFF302B63),
+                          color: FqColors.primary,
                           width: 2,
                         ),
                       ),
                       child: Text(
                         'LV $level',
                         style: const TextStyle(
-                          color: Color(0xFF302B63),
+                          color: FqColors.primary,
                           fontSize: 10,
                           fontWeight: FontWeight.w900,
                         ),
@@ -1005,9 +923,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(width: 18),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1050,9 +966,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 20),
-
           Row(
             children: [
               TweenAnimationBuilder<int>(
@@ -1069,9 +983,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   );
                 },
               ),
-
               const Spacer(),
-
               Text(
                 '$nextLevelXp XP',
                 style: TextStyle(
@@ -1081,11 +993,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 9),
-
           ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: FqRadii.cardBorder,
             child: TweenAnimationBuilder<double>(
               tween: Tween<double>(begin: 0, end: progress),
               duration: const Duration(milliseconds: 800),
@@ -1094,18 +1004,15 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 return LinearProgressIndicator(
                   value: value,
                   minHeight: 10,
-                  backgroundColor:
-                      Colors.white.withValues(alpha: 0.12),
+                  backgroundColor: Colors.white.withValues(alpha: 0.12),
                   valueColor: const AlwaysStoppedAnimation<Color>(
-                    Color(0xFFFFD166),
+                    FqColors.accent,
                   ),
                 );
               },
             ),
           ),
-
-          const SizedBox(height: 10),
-
+          const SizedBox(height: FqSpacing.label),
           Align(
             alignment: Alignment.centerLeft,
             child: AnimatedSwitcher(
@@ -1127,32 +1034,23 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     );
   }
 
-
   // ============================================================
   // QUEST
   // ============================================================
 
   Widget _buildQuestCard() {
-    final bool completed =
-        appState.morningWarriorCompleted;
+    final bool completed = appState.morningWarriorCompleted;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(FqSpacing.page),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        color: FqColors.surface,
+        borderRadius: FqRadii.heroBorder,
+        boxShadow: FqShadows.cardSoft(),
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -1162,51 +1060,39 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: completed
-                      ? const Color(0xFFEAF6EE)
-                      : const Color(0xFFEDEBFF),
-                  borderRadius:
-                      BorderRadius.circular(10),
+                  color:
+                      completed ? FqColors.successSurface : FqColors.lavender,
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  completed
-                      ? 'QUEST COMPLETE'
-                      : 'TODAY\'S QUEST',
+                  completed ? 'QUEST COMPLETE' : 'TODAY\'S QUEST',
                   style: TextStyle(
-                    color: completed
-                        ? const Color(0xFF27733A)
-                        : const Color(0xFF302B63),
+                    color: completed ? FqColors.success : FqColors.primary,
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
-
               const Spacer(),
-
               const Text(
                 '+100 XP',
                 style: TextStyle(
-                  color: Color(0xFFFF7A45),
+                  color: FqColors.energy,
                   fontWeight: FontWeight.w900,
                 ),
               ),
             ],
           ),
-
           const SizedBox(height: 18),
-
           const Text(
             'Morning Warrior',
             style: TextStyle(
               fontSize: 23,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF151B3D),
+              color: FqColors.ink,
             ),
           ),
-
           const SizedBox(height: 7),
-
           const Text(
             'Complete 20 minutes of physical activity today.',
             style: TextStyle(
@@ -1215,9 +1101,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               height: 1.4,
             ),
           ),
-
           const SizedBox(height: 18),
-
           SizedBox(
             width: double.infinity,
             height: 48,
@@ -1230,22 +1114,16 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                       });
                     },
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    const Color(0xFF302B63),
+                backgroundColor: FqColors.primary,
                 foregroundColor: Colors.white,
-                disabledBackgroundColor:
-                    const Color(0xFFEAF6EE),
-                disabledForegroundColor:
-                    const Color(0xFF27733A),
+                disabledBackgroundColor: FqColors.successSurface,
+                disabledForegroundColor: FqColors.success,
                 shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(15),
                 ),
               ),
               child: Text(
-                completed
-                    ? 'QUEST COMPLETED'
-                    : 'START QUEST',
+                completed ? 'QUEST COMPLETED' : 'START QUEST',
                 style: const TextStyle(
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.8,
@@ -1265,17 +1143,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   Widget _buildQuizCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(FqSpacing.page),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        color: FqColors.surface,
+        borderRadius: FqRadii.heroBorder,
+        boxShadow: FqShadows.cardSoft(),
       ),
       child: Row(
         children: [
@@ -1283,7 +1155,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             width: 58,
             height: 58,
             decoration: BoxDecoration(
-              color: const Color(0xFFEDEBFF),
+              color: FqColors.lavender,
               borderRadius: BorderRadius.circular(17),
             ),
             child: const Center(
@@ -1293,25 +1165,20 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               ),
             ),
           ),
-
           const SizedBox(width: 14),
-
           const Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Daily Fitness Quiz',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF151B3D),
+                    color: FqColors.ink,
                   ),
                 ),
-
                 SizedBox(height: 4),
-
                 Text(
                   'Test your knowledge and earn up to 100 XP.',
                   style: TextStyle(
@@ -1323,7 +1190,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               ],
             ),
           ),
-
           IconButton(
             onPressed: () {
               Navigator.push(
@@ -1337,7 +1203,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             },
             icon: const Icon(
               Icons.arrow_forward_rounded,
-              color: Color(0xFF302B63),
+              color: FqColors.primary,
             ),
           ),
         ],
@@ -1359,9 +1225,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             appState.badges.toString(),
           ),
         ),
-
         const SizedBox(width: 12),
-
         Expanded(
           child: _statCard(
             '🎟️',
@@ -1369,9 +1233,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             appState.stickers.toString(),
           ),
         ),
-
         const SizedBox(width: 12),
-
         Expanded(
           child: _statCard(
             '🏠',
@@ -1394,8 +1256,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         vertical: 16,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: FqColors.surface,
+        borderRadius: FqRadii.cardBorder,
       ),
       child: Column(
         children: [
@@ -1403,9 +1265,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             emoji,
             style: const TextStyle(fontSize: 25),
           ),
-
           const SizedBox(height: 8),
-
           Text(
             value,
             maxLines: 1,
@@ -1413,12 +1273,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF151B3D),
+              color: FqColors.ink,
             ),
           ),
-
           const SizedBox(height: 3),
-
           Text(
             title,
             style: const TextStyle(
@@ -1443,15 +1301,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         vertical: 8,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: FqColors.surface,
+        borderRadius: FqRadii.navigationBorder,
+        boxShadow: FqShadows.navFloat(),
       ),
       child: Row(
         children: [
@@ -1579,9 +1431,7 @@ class _NavItemState extends State<_NavItem> {
             vertical: 7,
           ),
           decoration: BoxDecoration(
-            color: selected
-                ? const Color(0xFFEDEBFF)
-                : Colors.transparent,
+            color: selected ? FqColors.lavender : Colors.transparent,
             borderRadius: BorderRadius.circular(18),
           ),
           child: Column(
@@ -1594,9 +1444,7 @@ class _NavItemState extends State<_NavItem> {
                 child: Icon(
                   widget.icon,
                   size: selected ? 24 : 22,
-                  color: selected
-                      ? const Color(0xFF302B63)
-                      : Colors.black38,
+                  color: selected ? FqColors.primary : Colors.black38,
                 ),
               ),
               const SizedBox(height: 4),
@@ -1605,12 +1453,8 @@ class _NavItemState extends State<_NavItem> {
                 curve: Curves.easeOut,
                 style: TextStyle(
                   fontSize: selected ? 10.5 : 9.5,
-                  fontWeight: selected
-                      ? FontWeight.w900
-                      : FontWeight.w700,
-                  color: selected
-                      ? const Color(0xFF302B63)
-                      : Colors.black38,
+                  fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
+                  color: selected ? FqColors.primary : Colors.black38,
                 ),
                 child: Text(widget.label),
               ),
