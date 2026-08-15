@@ -198,46 +198,107 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeader(),
+                  _animatedHomeCard(
+                    index: 0,
+                    child: _buildHeader(),
+                  ),
 
                   const SizedBox(height: 20),
 
-                  // FitQuest Snap
-                  _buildSnapCard(),
+                  _animatedHomeCard(
+                    index: 1,
+                    child: _buildSnapCard(),
+                  ),
 
                   const SizedBox(height: 18),
 
-                  _buildStreakCard(),
+                  _animatedHomeCard(
+                    index: 2,
+                    child: _buildStreakCard(),
+                  ),
 
                   const SizedBox(height: 18),
 
-                  _buildStepsCard(),
+                  _animatedHomeCard(
+                    index: 3,
+                    child: _buildStepsCard(),
+                  ),
 
                   const SizedBox(height: 18),
 
-                  _buildAiCoachCard(),
+                  _animatedHomeCard(
+                    index: 4,
+                    child: _buildAiCoachCard(),
+                  ),
 
                   const SizedBox(height: 18),
 
-                  _buildPlayerCard(),
+                  _animatedHomeCard(
+                    index: 5,
+                    child: _buildPlayerCard(),
+                  ),
 
                   const SizedBox(height: 18),
 
-                  _buildQuestCard(),
+                  _animatedHomeCard(
+                    index: 6,
+                    child: _buildQuestCard(),
+                  ),
 
                   const SizedBox(height: 18),
 
-                  _buildQuizCard(),
+                  _animatedHomeCard(
+                    index: 7,
+                    child: _buildQuizCard(),
+                  ),
 
                   const SizedBox(height: 18),
 
-                  _buildQuickStats(),
+                  _animatedHomeCard(
+                    index: 8,
+                    child: _buildQuickStats(),
+                  ),
                 ],
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  // ============================================================
+  // HOME MOTION
+  // ============================================================
+
+  Widget _animatedHomeCard({
+    required Widget child,
+    required int index,
+  }) {
+    final delay = Duration(milliseconds: 45 * index);
+
+    return TweenAnimationBuilder<double>(
+      key: ValueKey('home-card-$index'),
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 520),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        final delayedValue = ((value * 1.25) -
+                (delay.inMilliseconds / 520))
+            .clamp(0.0, 1.0);
+
+        return Opacity(
+          opacity: delayedValue,
+          child: Transform.translate(
+            offset: Offset(0, 14 * (1 - delayedValue)),
+            child: Transform.scale(
+              scale: 0.985 + (0.015 * delayedValue),
+              child: child,
+            ),
+          ),
+        );
+      },
+      child: child,
     );
   }
 
