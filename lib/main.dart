@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'screens/welcome_screen.dart';
 import 'notification_service.dart';
+import 'theme/theme.dart';
 import 'theme_controller.dart';
 
 Future<void> main() async {
@@ -33,22 +34,8 @@ class FitQuestApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           title: 'FitQuest',
           themeMode: ThemeController.instance.themeMode,
-
-          theme: ThemeData(
-            useMaterial3: true,
-            fontFamily: 'Arial',
-            brightness: Brightness.light,
-            colorSchemeSeed: const Color(0xFF302B63),
-          ),
-
-          darkTheme: ThemeData(
-            useMaterial3: true,
-            fontFamily: 'Arial',
-            brightness: Brightness.dark,
-            colorSchemeSeed: const Color(0xFF7C72E8),
-            scaffoldBackgroundColor: const Color(0xFF10111A),
-          ),
-
+          theme: FqTheme.light,
+          darkTheme: FqTheme.dark,
           home: const WelcomeScreen(),
         );
       },
