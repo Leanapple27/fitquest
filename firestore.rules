@@ -17,22 +17,33 @@ service cloud.firestore {
     }
 
     // -------------------------
+    // QUESTS
+    // -------------------------
+
+    match /quests/{questId} {
+      // Any authenticated FitQuest user can load quests.
+      allow read: if signedIn();
+
+      // Quest content should not be modified by students.
+      allow create, update, delete: if false;
+    }
+
+    // -------------------------
     // CLANS
     // -------------------------
 
     match /clans/{clanId} {
 
-      // Prototype:
       // Any authenticated user can discover/open clans.
       allow read: if signedIn();
 
-      // Any authenticated user can create a clan.
+      // Any signed-in user can create a clan.
       allow create: if signedIn();
 
-      // Prototype:
-      // Allow authenticated users to update clan data.
+      // Prototype: authenticated users can update clan data.
       allow update: if signedIn();
 
+      // Authenticated users can delete clans.
       allow delete: if signedIn();
 
       // -------------------------

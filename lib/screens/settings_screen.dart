@@ -63,6 +63,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
           const SizedBox(height: FqSpacing.section),
+          _sectionTitle('LANGUAGE'),
+          const SizedBox(height: 8),
+          _card(
+            children: [
+              ListTile(
+                leading: const Text(
+                  '🌐',
+                  style: TextStyle(fontSize: 23),
+                ),
+                title: const Text(
+                  'Language',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                subtitle: const Text(
+                  'English • हिंदी • मराठी',
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right_rounded,
+                ),
+                onTap: _showLanguagePicker,
+              ),
+            ],
+          ),
+          const SizedBox(height: FqSpacing.section),
           _sectionTitle('NOTIFICATIONS'),
           const SizedBox(height: 8),
           _card(
@@ -329,6 +355,101 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       },
     );
+  }
+
+  void _showLanguagePicker() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(
+                  FqSpacing.page,
+                  FqSpacing.label,
+                  FqSpacing.page,
+                  4,
+                ),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Choose language',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(
+                  FqSpacing.page,
+                  0,
+                  FqSpacing.page,
+                  FqSpacing.label,
+                ),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Multilingual support is currently under development. '
+                    'English will remain the app language for now.',
+                    style: TextStyle(
+                      color: FqColors.muted,
+                    ),
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Text('🇬🇧', style: TextStyle(fontSize: 22)),
+                title: const Text('English'),
+                subtitle: const Text('Current app language'),
+                trailing: const Icon(
+                  Icons.check_circle_rounded,
+                  color: FqColors.success,
+                ),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                },
+              ),
+              ListTile(
+                leading: const Text('🇮🇳', style: TextStyle(fontSize: 22)),
+                title: const Text('हिंदी'),
+                subtitle: const Text('Under development'),
+                onTap: () => _showLanguageComingSoon(sheetContext, 'हिंदी'),
+              ),
+              ListTile(
+                leading: const Text('🇮🇳', style: TextStyle(fontSize: 22)),
+                title: const Text('मराठी'),
+                subtitle: const Text('Under development'),
+                onTap: () => _showLanguageComingSoon(sheetContext, 'मराठी'),
+              ),
+              const SizedBox(height: FqSpacing.label),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showLanguageComingSoon(
+    BuildContext sheetContext,
+    String language,
+  ) {
+    Navigator.pop(sheetContext);
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            '$language support is currently under development.',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
   }
 
   void _showTeacherMode() {

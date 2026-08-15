@@ -2,6 +2,8 @@ import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'activity_calendar_screen.dart';
+import 'nutrition_screen.dart';
 
 import '../theme/theme.dart';
 
@@ -38,6 +40,12 @@ class _ProfileScreenState extends State<ProfileScreen>
   String selectedOutfit = 'default';
   String selectedFrame = 'none';
   String selectedBanner = 'fitness';
+
+  // Private health profile fields stored on the authenticated user's document.
+  double? heightCm;
+  double? weightKg;
+  String bloodGroup = '';
+  DateTime? dateOfBirth;
 
   bool showAvatarEditor = false;
   int avatarTab = 0;
@@ -98,6 +106,11 @@ class _ProfileScreenState extends State<ProfileScreen>
         final savedFrame = data['avatarFrame'];
         final savedBanner = data['avatarBanner'];
 
+        final savedHeightCm = data['heightCm'];
+        final savedWeightKg = data['weightKg'];
+        final savedBloodGroup = data['bloodGroup'];
+        final savedDateOfBirth = data['dateOfBirth'];
+
         final incomingXp = userXp is num ? userXp.toInt() : xp;
         final incomingLevel = (incomingXp ~/ 250) + 1;
 
@@ -148,6 +161,24 @@ class _ProfileScreenState extends State<ProfileScreen>
             selectedBanner = savedBanner;
           }
 
+          if (savedHeightCm is num && savedHeightCm > 0) {
+            heightCm = savedHeightCm.toDouble();
+          }
+
+          if (savedWeightKg is num && savedWeightKg > 0) {
+            weightKg = savedWeightKg.toDouble();
+          }
+
+          if (savedBloodGroup is String) {
+            bloodGroup = savedBloodGroup.trim();
+          }
+
+          if (savedDateOfBirth is Timestamp) {
+            dateOfBirth = savedDateOfBirth.toDate();
+          } else if (savedDateOfBirth is String) {
+            dateOfBirth = DateTime.tryParse(savedDateOfBirth);
+          }
+
           loading = false;
           _lastKnownLevel = incomingLevel;
         });
@@ -194,6 +225,44 @@ class _ProfileScreenState extends State<ProfileScreen>
                 _buildProfileHeader(),
                 const SizedBox(height: 18),
                 _buildStats(),
+                const SizedBox(height: 18),
+                _buildSection(
+                  title: 'HEALTH & WELLNESS',
+                  children: [
+                    _buildMenuItem(
+  iconData: Icons.calendar_month_rounded,
+  title: 'Activity Calendar',
+  subtitle: 'Track completed, skipped and upcoming events',
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ActivityCalendarScreen(),
+      ),
+    );
+  },
+),
+_buildMenuItem(
+  iconData: Icons.restaurant_rounded,
+  title: 'Nutrition Tracker',
+  subtitle: 'Track meals and understand your daily nutrition',
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const NutritionScreen(),
+      ),
+    );
+  },
+),
+                    _buildMenuItem(
+                      iconData: Icons.monitor_heart_rounded,
+                      title: 'Health Profile',
+                      subtitle: _healthProfileSubtitle(),
+                      onTap: _showHealthProfileSheet,
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 18),
                 _buildSection(
                   title: 'REWARDS',
@@ -1708,7 +1777,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildMenuItem({
-    required String icon,
+    String? icon,
+    IconData? iconData,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
@@ -1727,10 +1797,16 @@ class _ProfileScreenState extends State<ProfileScreen>
           borderRadius: BorderRadius.circular(13),
         ),
         child: Center(
-          child: Text(
-            icon,
-            style: const TextStyle(fontSize: 21),
-          ),
+          child: iconData != null
+              ? Icon(
+                  iconData,
+                  color: FqColors.primary,
+                  size: 22,
+                )
+              : Text(
+                  icon ?? '',
+                  style: const TextStyle(fontSize: 21),
+                ),
         ),
       ),
       title: Text(
@@ -1751,6 +1827,545 @@ class _ProfileScreenState extends State<ProfileScreen>
         Icons.chevron_right_rounded,
         color: Colors.black26,
       ),
+    );
+  }
+
+  String _healthProfileSubtitle() {
+    final parts = <String>[];
+
+    if (heightCm != null) {
+      parts.add('${_formatNumber(heightCm!)} cm');
+    }
+    if (weightKg != null) {
+      parts.add('${_formatNumber(weightKg!)} kg');
+    }
+    if (bmi != null) {
+      parts.add('BMI ${bmi!.toStringAsFixed(1)}');
+    }
+
+    return parts.isEmpty
+        ? 'Add your personal health information'
+        : parts.join(' • ');
+  }
+
+  double? get bmi {
+    final height = heightCm;
+    final weight = weightKg;
+
+    if (height == null || weight == null || height <= 0 || weight <= 0) {
+      return null;
+    }
+
+    final heightMeters = height / 100;
+    return weight / (heightMeters * heightMeters);
+  }
+
+  String _formatNumber(double value) {
+    return value == value.roundToDouble()
+        ? value.toStringAsFixed(0)
+        : value.toStringAsFixed(1);
+  }
+
+  Future<void> _saveHealthProfile({
+    required double? newHeightCm,
+    required double? newWeightKg,
+    required String newBloodGroup,
+    required DateTime? newDateOfBirth,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final updates = <String, dynamic>{
+      'heightCm': newHeightCm,
+      'weightKg': newWeightKg,
+      'bloodGroup': newBloodGroup,
+      'dateOfBirth': newDateOfBirth == null
+          ? null
+          : Timestamp.fromDate(newDateOfBirth),
+    };
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set(updates, SetOptions(merge: true));
+
+      if (!mounted) return;
+
+      setState(() {
+        heightCm = newHeightCm;
+        weightKg = newWeightKg;
+        bloodGroup = newBloodGroup;
+        dateOfBirth = newDateOfBirth;
+      });
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Health profile saved.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+    } catch (_) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Could not save your health profile. Try again.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+    }
+  }
+
+  Future<void> _showHealthProfileSheet() async {
+    final heightController = TextEditingController(
+      text: heightCm == null ? '' : _formatNumber(heightCm!),
+    );
+    final weightController = TextEditingController(
+      text: weightKg == null ? '' : _formatNumber(weightKg!),
+    );
+
+    String selectedBloodGroup = bloodGroup;
+    DateTime? selectedDate = dateOfBirth;
+    String? validationMessage;
+    bool saving = false;
+
+    try {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (sheetContext) {
+          return StatefulBuilder(
+            builder: (context, setSheetState) {
+              final previewHeight =
+                  double.tryParse(heightController.text.trim());
+              final previewWeight =
+                  double.tryParse(weightController.text.trim());
+
+              double? previewBmi;
+              if (previewHeight != null &&
+                  previewWeight != null &&
+                  previewHeight > 0 &&
+                  previewWeight > 0) {
+                final heightMeters = previewHeight / 100;
+                previewBmi =
+                    previewWeight / (heightMeters * heightMeters);
+              }
+
+              Future<void> pickDate() async {
+                final now = DateTime.now();
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: selectedDate ??
+                      DateTime(now.year - 13, now.month, now.day),
+                  firstDate: DateTime(1900),
+                  lastDate: now,
+                  helpText: 'SELECT DATE OF BIRTH',
+                );
+
+                if (picked != null) {
+                  setSheetState(() {
+                    selectedDate = picked;
+                  });
+                }
+              }
+
+              Future<void> save() async {
+                final parsedHeight =
+                    double.tryParse(heightController.text.trim());
+                final parsedWeight =
+                    double.tryParse(weightController.text.trim());
+
+                if (parsedHeight != null &&
+                    (parsedHeight < 50 || parsedHeight > 250)) {
+                  setSheetState(() {
+                    validationMessage =
+                        'Height should be between 50 and 250 cm.';
+                  });
+                  return;
+                }
+
+                if (parsedWeight != null &&
+                    (parsedWeight < 10 || parsedWeight > 300)) {
+                  setSheetState(() {
+                    validationMessage =
+                        'Weight should be between 10 and 300 kg.';
+                  });
+                  return;
+                }
+
+                setSheetState(() {
+                  validationMessage = null;
+                  saving = true;
+                });
+
+                await _saveHealthProfile(
+                  newHeightCm: parsedHeight,
+                  newWeightKg: parsedWeight,
+                  newBloodGroup: selectedBloodGroup,
+                  newDateOfBirth: selectedDate,
+                );
+
+                if (sheetContext.mounted) {
+                  Navigator.of(sheetContext).pop();
+                }
+              }
+
+              return Container(
+                padding: EdgeInsets.fromLTRB(
+                  18,
+                  14,
+                  18,
+                  24 + MediaQuery.of(context).viewInsets.bottom,
+                ),
+                decoration: BoxDecoration(
+                  color: FqColors.scaffold,
+                  borderRadius: FqRadii.sheetTopBorder,
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 42,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.black12,
+                              borderRadius: FqRadii.cardBorder,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: FqColors.lavender,
+                                borderRadius: FqRadii.chipBorder,
+                              ),
+                              child: const Icon(
+                                Icons.monitor_heart_rounded,
+                                color: FqColors.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'HEALTH PROFILE',
+                                    style: TextStyle(
+                                      color: FqColors.ink,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'Private personal health information',
+                                    style: TextStyle(
+                                      color: FqColors.muted,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _healthInput(
+                                controller: heightController,
+                                label: 'HEIGHT',
+                                hint: '170',
+                                suffix: 'cm',
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                  decimal: true,
+                                ),
+                                onChanged: (_) => setSheetState(() {}),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _healthInput(
+                                controller: weightController,
+                                label: 'WEIGHT',
+                                hint: '60',
+                                suffix: 'kg',
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                  decimal: true,
+                                ),
+                                onChanged: (_) => setSheetState(() {}),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        const Text(
+                          'BLOOD GROUP',
+                          style: TextStyle(
+                            color: FqColors.muted,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                        Wrap(
+                          spacing: 7,
+                          runSpacing: 7,
+                          children: [
+                            '',
+                            'A+',
+                            'A-',
+                            'B+',
+                            'B-',
+                            'AB+',
+                            'AB-',
+                            'O+',
+                            'O-',
+                          ].map((group) {
+                            final selected = selectedBloodGroup == group;
+
+                            return ChoiceChip(
+                              label: Text(group.isEmpty ? 'Not set' : group),
+                              selected: selected,
+                              onSelected: (_) {
+                                setSheetState(() {
+                                  selectedBloodGroup = group;
+                                });
+                              },
+                              selectedColor: FqColors.lavender,
+                              labelStyle: TextStyle(
+                                color: selected
+                                    ? FqColors.primary
+                                    : FqColors.ink,
+                                fontWeight: FontWeight.w800,
+                              ),
+                              side: BorderSide(
+                                color: selected
+                                    ? FqColors.primary
+                                    : Colors.black12,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 14),
+                        const Text(
+                          'DATE OF BIRTH',
+                          style: TextStyle(
+                            color: FqColors.muted,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                        InkWell(
+                          borderRadius: FqRadii.inputBorder,
+                          onTap: pickDate,
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 15,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: FqRadii.inputBorder,
+                              border: Border.all(
+                                color: Colors.black.withValues(alpha: 0.06),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.calendar_month_rounded,
+                                  color: FqColors.primary,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    selectedDate == null
+                                        ? 'Select date'
+                                        : '${selectedDate!.day.toString().padLeft(2, '0')}/'
+                                            '${selectedDate!.month.toString().padLeft(2, '0')}/'
+                                            '${selectedDate!.year}',
+                                    style: TextStyle(
+                                      color: selectedDate == null
+                                          ? FqColors.muted
+                                          : FqColors.ink,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: Colors.black26,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(15),
+                          decoration: BoxDecoration(
+                            color: FqColors.lavender,
+                            borderRadius: FqRadii.cardBorder,
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.insights_rounded,
+                                color: FqColors.primary,
+                                size: 22,
+                              ),
+                              const SizedBox(width: 11),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'BMI',
+                                      style: TextStyle(
+                                        color: FqColors.muted,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      previewBmi == null
+                                          ? 'Add height and weight'
+                                          : previewBmi.toStringAsFixed(1),
+                                      style: const TextStyle(
+                                        color: FqColors.ink,
+                                        fontSize: 21,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 9),
+                        const Text(
+                          'BMI is shown as an informational calculation. For students, '
+                          'BMI may need age- and sex-specific interpretation by a '
+                          'qualified health professional.',
+                          style: TextStyle(
+                            color: FqColors.muted,
+                            fontSize: 10,
+                            height: 1.35,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (validationMessage != null) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            validationMessage!,
+                            style: const TextStyle(
+                              color: FqColors.danger,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: saving ? null : save,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: FqColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 14,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: FqRadii.buttonBorder,
+                              ),
+                            ),
+                            child: Text(
+                              saving ? 'SAVING...' : 'SAVE HEALTH PROFILE',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.7,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      );
+    } finally {
+      heightController.dispose();
+      weightController.dispose();
+    }
+  }
+
+  Widget _healthInput({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required String suffix,
+    required TextInputType keyboardType,
+    required ValueChanged<String> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: FqColors.muted,
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 7),
+        TextField(
+          controller: controller,
+          onChanged: onChanged,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            hintText: hint,
+            suffixText: suffix,
+          ),
+        ),
+      ],
     );
   }
 
