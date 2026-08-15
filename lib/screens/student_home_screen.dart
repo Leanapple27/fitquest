@@ -909,64 +909,108 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
   Widget _buildPlayerCard() {
     final int currentXp = appState.xp;
-
     final int level = (currentXp ~/ 250) + 1;
-
     final int currentLevelStart = (level - 1) * 250;
-
     final int nextLevelXp = level * 250;
-
-    final int levelRange =
-        nextLevelXp - currentLevelStart;
-
-    final int xpIntoLevel =
-        currentXp - currentLevelStart;
+    final int levelRange = nextLevelXp - currentLevelStart;
+    final int xpIntoLevel = currentXp - currentLevelStart;
 
     final double progress = levelRange <= 0
         ? 1.0
         : (xpIntoLevel / levelRange).clamp(0.0, 1.0);
 
     final int xpRemaining =
-        nextLevelXp > currentXp
-            ? nextLevelXp - currentXp
-            : 0;
+        nextLevelXp > currentXp ? nextLevelXp - currentXp : 0;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF302B63),
-        borderRadius: BorderRadius.circular(24),
-      ),
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: progress),
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.easeOutCubic,
+      builder: (context, animatedProgress, child) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF302B63),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF302B63).withValues(alpha: 0.18),
+                blurRadius: 22,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: child,
+        );
+      },
       child: Column(
         children: [
           Row(
             children: [
-              Container(
-                width: 82,
-                height: 82,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.25),
-                    width: 2,
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeOutBack,
+                    width: 82,
+                    height: 82,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFFFFD166).withValues(alpha: 0.65),
+                        width: 2,
+                      ),
+                    ),
+                    child: AnimatedScale(
+                      scale: 1.0 + ((level.clamp(1, 10) - 1) * 0.008),
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeOutBack,
+                      child: const Center(
+                        child: Text(
+                          '🧙',
+                          style: TextStyle(fontSize: 43),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                child: const Center(
-                  child: Text(
-                    '🧙',
-                    style: TextStyle(fontSize: 43),
+                  Positioned(
+                    right: -4,
+                    bottom: -3,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 350),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFD166),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFF302B63),
+                          width: 2,
+                        ),
+                      ),
+                      child: Text(
+                        'LV $level',
+                        style: const TextStyle(
+                          color: Color(0xFF302B63),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
 
               const SizedBox(width: 18),
 
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       profileName.toUpperCase(),
@@ -979,9 +1023,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                         letterSpacing: 1,
                       ),
                     ),
-
                     const SizedBox(height: 4),
-
                     Text(
                       'LEVEL $level  •  FITNESS EXPLORER',
                       style: const TextStyle(
@@ -990,7 +1032,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-
                     if (profileSchoolId.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
@@ -1014,12 +1055,19 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
           Row(
             children: [
-              Text(
-                '⭐ $currentXp XP',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                ),
+              TweenAnimationBuilder<int>(
+                tween: IntTween(begin: 0, end: currentXp),
+                duration: const Duration(milliseconds: 650),
+                curve: Curves.easeOutCubic,
+                builder: (context, animatedXp, child) {
+                  return Text(
+                    '⭐ $animatedXp XP',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  );
+                },
               ),
 
               const Spacer(),
@@ -1038,15 +1086,21 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 10,
-              backgroundColor:
-                  Colors.white.withValues(alpha: 0.12),
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(
-                Color(0xFFFFD166),
-              ),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: 0, end: progress),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, child) {
+                return LinearProgressIndicator(
+                  value: value,
+                  minHeight: 10,
+                  backgroundColor:
+                      Colors.white.withValues(alpha: 0.12),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    Color(0xFFFFD166),
+                  ),
+                );
+              },
             ),
           ),
 
@@ -1054,13 +1108,17 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
           Align(
             alignment: Alignment.centerLeft,
-            child: Text(
-              xpRemaining > 0
-                  ? '$xpRemaining XP to Level ${level + 1}'
-                  : 'Level up ready! 🎉',
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 12,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: Text(
+                xpRemaining > 0
+                    ? '$xpRemaining XP to Level ${level + 1}'
+                    : 'Level up ready! 🎉',
+                key: ValueKey('$level-$xpRemaining'),
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                ),
               ),
             ),
           ),
@@ -1068,6 +1126,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       ),
     );
   }
+
 
   // ============================================================
   // QUEST
