@@ -1,9 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../app_state.dart';
 
 class GeminiCoachService {
-  // Built-in Gemini API Key with environment override support
   static const String _defaultApiKey = String.fromEnvironment(
     'GEMINI_API_KEY',
     defaultValue: 'AQ.Ab8RN6J2PAMV0rjKoKImYZM-gcgWC1F1Ghr2405YhgterdznHw',
@@ -30,7 +31,7 @@ Your personality:
   void _initModel() {
     try {
       _model = GenerativeModel(
-        model: 'gemini-1.5-flash',
+        model: 'gemini-flash-latest',
         apiKey: _apiKey,
         systemInstruction: Content.system(_systemPrompt),
         generationConfig: GenerationConfig(
@@ -48,13 +49,27 @@ Your personality:
     }
   }
 
-  /// Sends a message to Gemini and returns the AI response
+  /// Sends a message to Gemini and returns the dynamic AI response
   Future<String> sendMessage({
     required String userMessage,
     AppState? appState,
   }) async {
-    // If Gemini model is ready, query Gemini
-    if (_chatSession != null && _apiKey.isNotEmpty && !_apiKey.contains('Demo')) {
+    // 1. Try Direct REST API call (most reliable with latest model endpoints)
+    if (_apiKey.isNotEmpty) {
+      try {
+        final restResponse = await _queryGeminiRest(userMessage);
+        if (restResponse != null && restResponse.trim().isNotEmpty) {
+          return restResponse.trim();
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('REST Gemini query error: $e');
+        }
+      }
+    }
+
+    // 2. Try SDK ChatSession
+    if (_chatSession != null && _apiKey.isNotEmpty) {
       try {
         final response = await _chatSession!.sendMessage(
           Content.text(userMessage),
@@ -66,16 +81,57 @@ Your personality:
         }
       } catch (e) {
         if (kDebugMode) {
-          debugPrint('Gemini API Error: $e. Using offline sports intelligence.');
+          debugPrint('SDK Gemini API Error: $e');
         }
       }
     }
 
-    // High-quality contextual fitness coach fallback
+    // 3. Fallback to contextual intelligence
     return _generateContextualResponse(userMessage, appState);
   }
 
-  /// Intelligent contextual response generator for offline / fallback states
+  Future<String?> _queryGeminiRest(String message) async {
+    final client = HttpClient();
+    try {
+      final uri = Uri.parse(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=$_apiKey',
+      );
+
+      final request = await client.postUrl(uri);
+      request.headers.set('Content-Type', 'application/json');
+
+      final body = jsonEncode({
+        'systemInstruction': {
+          'parts': [{'text': _systemPrompt}],
+        },
+        'contents': [
+          {
+            'parts': [{'text': message}],
+          },
+        ],
+      });
+
+      request.write(body);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final responseBody = await response.transform(utf8.decoder).join();
+        final json = jsonDecode(responseBody) as Map<String, dynamic>;
+        final candidates = json['candidates'] as List?;
+        if (candidates != null && candidates.isNotEmpty) {
+          final content = candidates[0]['content'] as Map<String, dynamic>?;
+          final parts = content?['parts'] as List?;
+          if (parts != null && parts.isNotEmpty) {
+            return parts[0]['text'] as String?;
+          }
+        }
+      }
+    } finally {
+      client.close();
+    }
+    return null;
+  }
+
   String _generateContextualResponse(String query, AppState? appState) {
     final lower = query.toLowerCase();
     final streak = appState?.streak ?? 12;
