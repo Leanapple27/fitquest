@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'services/anti_cheat_service.dart';
 import 'widget_service.dart';
 
 class AppState extends ChangeNotifier {
@@ -11,6 +12,8 @@ class AppState extends ChangeNotifier {
 
   int xp = 1820;
   int streak = 12;
+  int dailyEarnedXp = 0;
+  bool isFairPlayVerified = true;
 // -----------------------------
 // QUEST DATA
 // -----------------------------
@@ -166,6 +169,8 @@ DocumentReference<Map<String, dynamic>>? get _userDoc {
     }
 
     dailyQuestDate = prefs.getString(_localKey(_dailyQuestDateKey)) ?? '';
+    dailyEarnedXp = prefs.getInt(_localKey('dailyEarnedXp')) ?? 0;
+    isFairPlayVerified = prefs.getBool(_localKey('isFairPlayVerified')) ?? true;
     weeklyFitnessActivities =
     prefs.getInt(_localKey('weeklyFitnessActivities')) ?? 0;
 
@@ -433,6 +438,16 @@ weeklyChallengeWeek =
     dailyQuestDate,
   );
 
+  await prefs.setInt(
+    _localKey('dailyEarnedXp'),
+    dailyEarnedXp,
+  );
+
+  await prefs.setBool(
+    _localKey('isFairPlayVerified'),
+    isFairPlayVerified,
+  );
+
   await prefs.setBool(
     _morningWarriorKey,
     morningWarriorCompleted,
@@ -565,6 +580,7 @@ weeklyChallengeWeek =
     }
 
     dailyQuestDate = today;
+    dailyEarnedXp = 0;
     completedDailyQuestIds.clear();
 
     await _saveProgress();
@@ -600,6 +616,7 @@ weeklyChallengeWeek =
     // Daily quests are repeatable on a new calendar day.
     if (dailyQuestDate != _todayKey()) {
       dailyQuestDate = _todayKey();
+      dailyEarnedXp = 0;
       completedDailyQuestIds.clear();
     }
 
@@ -607,11 +624,18 @@ weeklyChallengeWeek =
       return false;
     }
 
-    completedDailyQuestIds.add(questId);
+    // Apply AntiCheat daily XP cap (500 XP maximum per day)
+    final xpValidation = AntiCheatService.validateDailyXp(
+      currentDailyXp: dailyEarnedXp,
+      incomingXp: rewardXp,
+    );
 
-    // Keep the lifetime quest ID list for overall progress/history.
+    final awardedXp = xpValidation.allowedXp;
+
+    completedDailyQuestIds.add(questId);
     completedQuestIds.add(questId);
-    xp += rewardXp;
+    xp += awardedXp;
+    dailyEarnedXp += awardedXp;
     completedQuests++;
 
     // Count every successfully completed dynamic/daily quest toward the
