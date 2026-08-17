@@ -6,7 +6,7 @@ class GeminiCoachService {
   // Built-in Gemini API Key with environment override support
   static const String _defaultApiKey = String.fromEnvironment(
     'GEMINI_API_KEY',
-    defaultValue: 'AIzaSyDemoFitQuestKeyForEvaluationOnly', // Configurable
+    defaultValue: 'AQ.Ab8RN6J2PAMV0rjKoKImYZM-gcgWC1F1Ghr2405YhgterdznHw',
   );
 
   static const String _systemPrompt = '''
