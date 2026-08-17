@@ -2,11 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import '../theme/theme.dart';
-import 'leaderboard_screen.dart';
-
 import '../app_state.dart';
 import '../clan_service.dart';
+import '../theme/fq_colors.dart';
+import '../theme/fq_radii.dart';
+import '../theme/fq_spacing.dart';
+import '../theme/fq_typography.dart';
+import 'leaderboard_screen.dart';
 
 class CommunityScreen extends StatefulWidget {
   final AppState appState;
@@ -46,9 +48,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
   ];
 
   final ClanService _clanService = ClanService();
-
   String? _selectedClanId;
-  bool _showDiscover = false;
+  int _activeSegment = 0; // 0: Discover, 1: My Clan, 2: How It Works
 
   @override
   Widget build(BuildContext context) {
@@ -62,33 +63,77 @@ class _CommunityScreenState extends State<CommunityScreen> {
     }
 
     return Scaffold(
+      backgroundColor: FqColors.scaffold,
       appBar: AppBar(
-        title: const Text('Community'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 1,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: FqColors.lavender,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text('🛡️', style: TextStyle(fontSize: 16)),
+            ),
+            const SizedBox(width: 9),
+            Text(
+              'Community',
+              style: FqTypography.screenTitle(color: FqColors.ink).copyWith(
+                fontSize: 20,
+              ),
+            ),
+          ],
+        ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: IconButton(
-              tooltip: 'Leaderboard',
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => LeaderboardScreen(
-                      currentUserXp: widget.appState.xp,
+            padding: const EdgeInsets.only(right: 14),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => LeaderboardScreen(
+                        currentUserXp: widget.appState.xp,
+                      ),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 11,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF7E6),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: FqColors.accent.withValues(alpha: 0.5),
                     ),
                   ),
-                );
-              },
-              icon: Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: FqColors.accent.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.emoji_events_rounded,
-                  color: FqColors.energy,
-                  size: 22,
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.emoji_events_rounded,
+                        color: Color(0xFFD48806),
+                        size: 17,
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        'Ranks',
+                        style: TextStyle(
+                          color: Color(0xFF9254DE),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -99,7 +144,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
         child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: _clanService.streamDiscoverClans(),
           builder: (context, snapshot) {
-            final docs = [...(snapshot.data?.docs ?? [])];
+            final docs = <QueryDocumentSnapshot<Map<String, dynamic>>>[
+              ...(snapshot.data?.docs ?? []),
+            ];
 
             docs.sort((a, b) {
               final aXp = a.data()['weeklyXp'] is num
@@ -112,73 +159,41 @@ class _CommunityScreenState extends State<CommunityScreen> {
             });
 
             return ListView(
-              padding: const EdgeInsets.fromLTRB(
-                  FqSpacing.page, 5, FqSpacing.page, FqSpacing.pageBottom),
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               children: [
-                _buildHero(),
-                const SizedBox(height: 20),
-                _sectionTitle('CLANS'),
-                const SizedBox(height: FqSpacing.label),
-                _buildActionCard(
-                  emoji: '🛡️',
-                  title: 'Create a Clan',
-                  subtitle: 'Start your own fitness community.',
-                  button: 'CREATE',
-                  onTap: _createClan,
-                ),
-                const SizedBox(height: FqSpacing.label),
-                _buildActionCard(
-                  emoji: '🌎',
-                  title: 'Discover Clans',
-                  subtitle: 'Join public clubs and compete together.',
-                  button: _showDiscover ? 'HIDE' : 'BROWSE',
-                  onTap: () => setState(
-                    () => _showDiscover = !_showDiscover,
+                _buildHeroBanner(),
+                const SizedBox(height: 16),
+                _buildSegmentedControl(),
+                const SizedBox(height: 16),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 260),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) {
+                    final curved = CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    );
+                    return FadeTransition(
+                      opacity: curved,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0.02, 0),
+                          end: Offset.zero,
+                        ).animate(curved),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: KeyedSubtree(
+                    key: ValueKey<int>(_activeSegment),
+                    child: _activeSegment == 0
+                        ? _buildDiscoverSection(snapshot, docs)
+                        : _activeSegment == 1
+                            ? _buildMyClanSection(docs)
+                            : _buildHowItWorksSection(),
                   ),
-                ),
-                if (_showDiscover) ...[
-                  const SizedBox(height: 12),
-                  if (snapshot.hasError)
-                    _firestoreError(snapshot.error)
-                  else if (snapshot.connectionState == ConnectionState.waiting)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(25),
-                        child: CircularProgressIndicator(),
-                      ),
-                    )
-                  else if (docs.isEmpty)
-                    _emptyClans()
-                  else
-                    ...docs.map(
-                      (doc) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _buildDiscoverClan(doc),
-                      ),
-                    ),
-                ],
-                const SizedBox(height: FqSpacing.section),
-                _sectionTitle('HOW CLANS WORK'),
-                const SizedBox(height: FqSpacing.label),
-                _buildFeature(
-                  '💬',
-                  'Live Clan Chat',
-                  'Talk with your whole clan in real time.',
-                ),
-                _buildFeature(
-                  '⚔️',
-                  'Clan Wars',
-                  'Compete against another clan every week.',
-                ),
-                _buildFeature(
-                  '🏆',
-                  'Weekly Leaderboard',
-                  'Every member contributes to the clan score.',
-                ),
-                _buildFeature(
-                  '👥',
-                  'Member List',
-                  'See everyone and their weekly contribution.',
                 ),
               ],
             );
@@ -188,120 +203,289 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 
-  Widget _buildHero() {
+  // ---------------------------------------------------------------------------
+  // HERO BANNER
+  // ---------------------------------------------------------------------------
+
+  Widget _buildHeroBanner() {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: FqColors.heroGradient,
+          colors: [Color(0xFF302B63), Color(0xFF51489A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(27),
-      ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'FITQUEST COMMUNITY',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.3,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Build your clan.\nCompete together. 🛡️',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 26,
-              height: 1.15,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: FqSpacing.label),
-          Text(
-            'Chat, challenge other clans and climb the weekly leaderboard.',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 11,
-              height: 1.35,
-            ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF302B63).withValues(alpha: 0.22),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _sectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        color: Colors.black45,
-        fontSize: 10,
-        fontWeight: FontWeight.w900,
-        letterSpacing: 1.1,
-      ),
-    );
-  }
-
-  Widget _buildActionCard({
-    required String emoji,
-    required String title,
-    required String subtitle,
-    required String button,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: FqColors.surface,
-        borderRadius: BorderRadius.circular(19),
-      ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 28)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: FqColors.ink,
-                    fontSize: 13,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 9,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('⚔️', style: TextStyle(fontSize: 11)),
+                    SizedBox(width: 5),
+                    Text(
+                      'WEEKLY CLAN WARS ACTIVE',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: FqColors.accent.withValues(alpha: 0.22),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text(
+                  'DIVISION 1',
+                  style: TextStyle(
+                    color: FqColors.accent,
+                    fontSize: 8.5,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Colors.black45,
-                    fontSize: 10,
-                  ),
-                ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Build your clan.\nCompete together.',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              height: 1.2,
+              fontWeight: FontWeight.w900,
             ),
           ),
-          TextButton(
-            onPressed: onTap,
-            child: Text(
-              button,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-              ),
+          const SizedBox(height: 6),
+          const Text(
+            'Team up with classmates, complete quests together, and dominate the weekly fitness leaderboard.',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 11.5,
+              height: 1.4,
             ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              ElevatedButton.icon(
+                onPressed: _createClan,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: FqColors.accent,
+                  foregroundColor: const Color(0xFF151B3D),
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: const Text(
+                  'Create Clan',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              OutlinedButton.icon(
+                onPressed: () => setState(() => _activeSegment = 0),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.35),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.explore_rounded, size: 16),
+                label: const Text(
+                  'Explore Clans',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDiscoverClan(
+  // ---------------------------------------------------------------------------
+  // SEGMENTED CONTROL
+  // ---------------------------------------------------------------------------
+
+  Widget _buildSegmentedControl() {
+    final segments = [
+      {'label': 'Discover', 'icon': Icons.explore_rounded},
+      {'label': 'My Clan', 'icon': Icons.shield_rounded},
+      {'label': 'How It Works', 'icon': Icons.info_outline_rounded},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE7E8EE)),
+      ),
+      child: Row(
+        children: List.generate(segments.length, (index) {
+          final isSelected = _activeSegment == index;
+          final item = segments[index];
+
+          return Expanded(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => setState(() => _activeSegment = index),
+                borderRadius: BorderRadius.circular(12),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(vertical: 9),
+                  decoration: BoxDecoration(
+                    color: isSelected ? FqColors.primary : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: FqColors.primary.withValues(alpha: 0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        item['icon'] as IconData,
+                        size: 15,
+                        color: isSelected ? Colors.white : const Color(0xFF747887),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        item['label'] as String,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : const Color(0xFF555A72),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // DISCOVER SECTION
+  // ---------------------------------------------------------------------------
+
+  Widget _buildDiscoverSection(
+    AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot,
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+  ) {
+    if (snapshot.hasError) {
+      return _firestoreError(snapshot.error);
+    }
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(35),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    if (docs.isEmpty) {
+      return _emptyClans();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'TOP CLANS THIS WEEK',
+              style: FqTypography.sectionLabel(color: FqColors.muted),
+            ),
+            Text(
+              '${docs.length} Active',
+              style: const TextStyle(
+                color: FqColors.primaryMid,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        ...docs.asMap().entries.map((entry) {
+          final rank = entry.key + 1;
+          final doc = entry.value;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _buildDiscoverClanCard(doc, rank),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildDiscoverClanCard(
     QueryDocumentSnapshot<Map<String, dynamic>> doc,
+    int rank,
   ) {
     final data = doc.data();
     final emoji = data['emoji']?.toString() ?? '🛡️';
@@ -312,59 +496,146 @@ class _CommunityScreenState extends State<CommunityScreen> {
       stream: _clanService.streamMembers(doc.id),
       builder: (context, memberSnapshot) {
         final realMembers = memberSnapshot.data?.docs.length ?? 0;
-        final memberCount = realMembers + _demoMembers.length;
+        final totalMembers = realMembers + _demoMembers.length;
+
+        Color? rankColor;
+        if (rank == 1) rankColor = const Color(0xFFFFD700);
+        if (rank == 2) rankColor = const Color(0xFFC0C0C0);
+        if (rank == 3) rankColor = const Color(0xFFCD7F32);
 
         return Container(
-          padding: const EdgeInsets.all(15),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(19),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFE7E8EE)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Row(
             children: [
+              // Rank Medal / Index
               Container(
-                width: 48,
-                height: 48,
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
-                  color: FqColors.lavender,
-                  borderRadius: BorderRadius.circular(15),
+                  color: rankColor != null
+                      ? rankColor.withValues(alpha: 0.2)
+                      : FqColors.scaffold,
+                  shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
-                    emoji,
-                    style: const TextStyle(fontSize: 24),
+                    rank <= 3 ? (rank == 1 ? '🥇' : rank == 2 ? '🥈' : '🥉') : '#$rank',
+                    style: TextStyle(
+                      color: rank <= 3 ? Colors.black : const Color(0xFF747887),
+                      fontSize: rank <= 3 ? 14 : 10,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ),
+              const SizedBox(width: 10),
+
+              // Clan Emblem
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: FqColors.lavender,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: Text(emoji, style: const TextStyle(fontSize: 22)),
+                ),
+              ),
               const SizedBox(width: 11),
+
+              // Clan Details
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: FqColors.ink,
-                        fontSize: 13,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '$memberCount members • $xp weekly XP',
-                      style: const TextStyle(
-                        color: Colors.black45,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.people_alt_rounded,
+                          size: 13,
+                          color: Color(0xFF747887),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$totalMembers members',
+                          style: const TextStyle(
+                            color: Color(0xFF747887),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '•',
+                          style: TextStyle(color: Colors.grey.shade400),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.bolt_rounded,
+                          size: 14,
+                          color: FqColors.energy,
+                        ),
+                        Text(
+                          '$xp XP',
+                          style: const TextStyle(
+                            color: FqColors.energy,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              IconButton(
+
+              // Join Button
+              ElevatedButton(
                 onPressed: () => _joinClan(doc.id),
-                icon: const Icon(Icons.arrow_forward_rounded),
-                color: FqColors.primary,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: FqColors.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                ),
+                child: const Text(
+                  'JOIN',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
+                ),
               ),
             ],
           ),
@@ -373,43 +644,237 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 
-  Widget _buildFeature(String emoji, String title, String subtitle) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 25)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: FqColors.ink,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Colors.black45,
-                    fontSize: 10,
-                  ),
-                ),
-              ],
-            ),
+  // ---------------------------------------------------------------------------
+  // MY CLAN SECTION
+  // ---------------------------------------------------------------------------
+
+  Widget _buildMyClanSection(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+  ) {
+    if (docs.isEmpty) {
+      return _emptyClans();
+    }
+
+    final topClan = docs.first;
+    final data = topClan.data();
+    final name = data['name']?.toString() ?? 'Featured Clan';
+    final emoji = data['emoji']?.toString() ?? '🛡️';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFE7E8EE)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: FqColors.lavender,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Center(
+                      child: Text(emoji, style: const TextStyle(fontSize: 26)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            color: FqColors.ink,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        const Text(
+                          'Your Active Fitness Clan',
+                          style: TextStyle(
+                            color: Color(0xFF747887),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Divider(height: 1),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _clanStatMini('4', 'Quests Done'),
+                  _clanStatMini('+340', 'XP Today'),
+                  _clanStatMini('Rank #1', 'War Status'),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _joinClan(topClan.id),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: FqColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  icon: const Icon(Icons.meeting_room_rounded, size: 18),
+                  label: const Text(
+                    'ENTER CLAN HQ',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _clanStatMini(String value, String label) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: FqColors.ink,
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF747887),
+            fontSize: 9.5,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // HOW IT WORKS SECTION
+  // ---------------------------------------------------------------------------
+
+  Widget _buildHowItWorksSection() {
+    final perks = [
+      {
+        'emoji': '💬',
+        'title': 'Live Clan Chat',
+        'desc': 'Coordinate workout meetups and motivate your team in real time.',
+      },
+      {
+        'emoji': '⚔️',
+        'title': 'Weekly Clan Wars',
+        'desc': 'Compete head-to-head against another clan every week for bonus trophies.',
+      },
+      {
+        'emoji': '🏆',
+        'title': 'Contributor Leaderboard',
+        'desc': 'Every movement quest and step logged contributes to the clan standing.',
+      },
+      {
+        'emoji': '👥',
+        'title': 'Peer Accountability',
+        'desc': 'Fitness is better together. Cheer on your friends and stay on streak.',
+      },
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'HOW FITQUEST CLANS WORK',
+          style: FqTypography.sectionLabel(color: FqColors.muted),
+        ),
+        const SizedBox(height: 10),
+        ...perks.map((p) => Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFFE7E8EE)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: FqColors.lavender,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Text(
+                        p['emoji'] as String,
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          p['title'] as String,
+                          style: const TextStyle(
+                            color: FqColors.ink,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          p['desc'] as String,
+                          style: const TextStyle(
+                            color: Color(0xFF747887),
+                            fontSize: 10.5,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )),
+      ],
     );
   }
 
@@ -451,31 +916,48 @@ class _CommunityScreenState extends State<CommunityScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: FqRadii.cardBorder,
+        border: Border.all(color: const Color(0xFFE7E8EE)),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Text('🛡️', style: TextStyle(fontSize: 38)),
-          SizedBox(height: 8),
-          Text(
+          const Text('🛡️', style: TextStyle(fontSize: 38)),
+          const SizedBox(height: 8),
+          const Text(
             'No public clans yet',
             style: TextStyle(
               fontWeight: FontWeight.w900,
               color: FqColors.ink,
             ),
           ),
-          SizedBox(height: 4),
-          Text(
-            'Create the first one and start your community.',
+          const SizedBox(height: 4),
+          const Text(
+            'Create the first one and lead your classmates to victory!',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.black45,
-              fontSize: 10,
+              fontSize: 11,
             ),
+          ),
+          const SizedBox(height: 14),
+          ElevatedButton(
+            onPressed: _createClan,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: FqColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text('Create First Clan'),
           ),
         ],
       ),
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // CREATE CLAN MODAL
+  // ---------------------------------------------------------------------------
 
   Future<void> _createClan() async {
     final controller = TextEditingController();
@@ -487,35 +969,81 @@ class _CommunityScreenState extends State<CommunityScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text(
-                'Create Clan',
-                style: TextStyle(fontWeight: FontWeight.w900),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: FqColors.lavender,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(emoji, style: const TextStyle(fontSize: 22)),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Create Clan',
+                    style: TextStyle(
+                      color: FqColors.ink,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextField(
-                    controller: controller,
-                    maxLength: 30,
-                    decoration: const InputDecoration(
-                      labelText: 'Clan name',
-                      hintText: 'Cricket Warriors',
+                  const Text(
+                    'Choose an Emblem:',
+                    style: TextStyle(
+                      color: Color(0xFF747887),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
-                    children: ['🛡️', '🏏', '🏋️', '🏃', '🧘', '⚽', '🔥']
+                    runSpacing: 8,
+                    children: ['🛡️', '🏏', '🏋️', '🏃', '🧘', '⚽', '🔥', '⚡']
                         .map(
                           (item) => ChoiceChip(
-                            label: Text(item),
+                            label: Text(item, style: const TextStyle(fontSize: 18)),
                             selected: emoji == item,
+                            selectedColor: FqColors.lavender,
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: BorderSide(
+                                color: emoji == item
+                                    ? FqColors.primary
+                                    : const Color(0xFFE5E7EB),
+                              ),
+                            ),
                             onSelected: (_) {
                               setDialogState(() => emoji = item);
                             },
                           ),
                         )
                         .toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: controller,
+                    maxLength: 30,
+                    decoration: InputDecoration(
+                      labelText: 'Clan Name',
+                      hintText: 'e.g. Riverside Sprinters',
+                      filled: true,
+                      fillColor: FqColors.scaffold,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -524,7 +1052,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   onPressed: () => Navigator.pop(context, false),
                   child: const Text('CANCEL'),
                 ),
-                FilledButton(
+                ElevatedButton(
                   onPressed: () async {
                     if (controller.text.trim().isEmpty) return;
                     try {
@@ -542,6 +1070,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
                       }
                     }
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: FqColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                   child: const Text('CREATE'),
                 ),
               ],
@@ -553,7 +1088,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
     if (result == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Clan created!')),
+        const SnackBar(content: Text('Clan created successfully!')),
       );
     }
   }
@@ -577,6 +1112,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
   }
 }
 
+// -----------------------------------------------------------------------------
+// CLAN SCREEN (CHAT, MEMBERS, WAR)
+// -----------------------------------------------------------------------------
+
 class _ClanScreen extends StatefulWidget {
   final AppState appState;
   final ClanService clanService;
@@ -599,159 +1138,6 @@ class _ClanScreenState extends State<_ClanScreen>
   late final TabController _tabController;
   final TextEditingController _messageController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    _messageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: widget.clanService.streamClan(widget.clanId),
-      builder: (context, clanSnapshot) {
-        final data = clanSnapshot.data?.data() ?? {};
-        final name = data['name']?.toString() ?? 'Clan';
-        final emoji = data['emoji']?.toString() ?? '🛡️';
-        final weeklyXp =
-            data['weeklyXp'] is num ? (data['weeklyXp'] as num).toInt() : 0;
-
-        return Scaffold(
-          appBar: AppBar(
-            leading: IconButton(
-              onPressed: widget.onBack,
-              icon: const Icon(Icons.arrow_back_rounded),
-            ),
-            title: Row(
-              children: [
-                Text(emoji, style: const TextStyle(fontSize: 22)),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    name,
-                    overflow: TextOverflow.ellipsis,
-                    style: FqTypography.screenTitle().copyWith(fontSize: 18),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          body: Column(
-            children: [
-              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                stream: widget.clanService.streamMembers(widget.clanId),
-                builder: (context, memberSnapshot) {
-                  final realMembers = memberSnapshot.data?.docs.length ?? 0;
-                  final totalMembers = realMembers + _demoMembers.length;
-
-                  final realXp = memberSnapshot.data?.docs.fold<int>(
-                        0,
-                        (sum, doc) {
-                          final value = doc.data()['weeklyXp'];
-                          return sum + (value is num ? value.toInt() : 0);
-                        },
-                      ) ??
-                      weeklyXp;
-
-                  final totalXp = realXp + _demoWarPoints();
-
-                  return Container(
-                    margin: const EdgeInsets.fromLTRB(15, 0, 15, 10),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(19),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _stat(
-                            '👥',
-                            '$totalMembers',
-                            'MEMBERS',
-                          ),
-                        ),
-                        Expanded(
-                          child: _stat(
-                            '⭐',
-                            '$totalXp',
-                            'WEEKLY XP',
-                          ),
-                        ),
-                        Expanded(
-                          child: _stat(
-                            '⚔️',
-                            '$totalXp',
-                            'WAR',
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-              TabBar(
-                controller: _tabController,
-                labelColor: FqColors.primary,
-                unselectedLabelColor: Colors.black45,
-                indicatorColor: FqColors.accent,
-                tabs: const [
-                  Tab(text: 'CHAT'),
-                  Tab(text: 'MEMBERS'),
-                  Tab(text: 'WAR'),
-                ],
-              ),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildChat(),
-                    _buildMembers(),
-                    _buildWar(),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _stat(String emoji, String value, String label) {
-    return Column(
-      children: [
-        Text(emoji, style: const TextStyle(fontSize: 18)),
-        const SizedBox(height: 3),
-        Text(
-          value,
-          style: const TextStyle(
-            color: FqColors.ink,
-            fontSize: 12,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.black45,
-            fontSize: 7,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Prototype-only demo members. They are clearly labeled so judges can
-  // distinguish simulated activity from real Firebase users.
   final List<Map<String, dynamic>> _demoMembers = const [
     {
       'name': 'Arjun',
@@ -773,50 +1159,54 @@ class _ClanScreenState extends State<_ClanScreen>
     },
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
+
   int _demoWarPoints() {
     return _demoMembers.fold<int>(
       0,
-      (sum, member) => sum + (member['weeklyXp'] as int),
+      (total, member) => total + (member['weeklyXp'] as int),
     );
   }
 
   int _myWarPoints() {
     final state = widget.appState;
-
     int points = state.weeklyFitnessActivities * 50;
-
-    if (state.quizCompleted) {
-      points += 50;
-    }
-
-    if (state.communityChallengeCompleted) {
-      points += 25;
-    }
-
+    if (state.quizCompleted) points += 50;
+    if (state.communityChallengeCompleted) points += 25;
     return points;
   }
 
   Future<void> _sendDemoReply(String userText) async {
     final text = userText.toLowerCase();
-
     String reply;
     String senderName;
 
     if (text.contains('hi') || text.contains('hello') || text.contains('hey')) {
-      senderName = 'Arjun 🏃 · Demo';
-      reply = 'Hey! Welcome to the clan 👋 Let’s smash this week!';
+      senderName = 'Arjun 🏃';
+      reply = 'Hey! Welcome to the clan chat 👋 Ready for today\'s quest?';
     } else if (text.contains('war') || text.contains('challenge')) {
-      senderName = 'Maya 🧘 · Demo';
-      reply = 'Clan War is on! 🔥 Everyone’s contribution counts.';
-    } else if (text.contains('workout') || text.contains('gym')) {
-      senderName = 'Kabir 🏋️ · Demo';
-      reply = 'Nice! 💪 I’m doing my workout too. Let’s push the clan up!';
+      senderName = 'Maya 🧘';
+      reply = 'Clan War is on! 🔥 Every workout gives us points!';
+    } else if (text.contains('workout') || text.contains('gym') || text.contains('run')) {
+      senderName = 'Kabir 🏋️';
+      reply = 'Awesome hustle! 💪 Let\'s push our clan to Rank #1!';
     } else {
-      senderName = 'Maya 🧘 · Demo';
-      reply = 'Nice! 🙌 Keep going — every little win helps the clan.';
+      senderName = 'Maya 🧘';
+      reply = 'Nice! 🙌 Every little win helps our clan level up.';
     }
 
-    await Future<void>.delayed(const Duration(milliseconds: 900));
+    await Future<void>.delayed(const Duration(milliseconds: 800));
 
     try {
       await FirebaseFirestore.instance
@@ -831,9 +1221,168 @@ class _ClanScreenState extends State<_ClanScreen>
         'createdAt': FieldValue.serverTimestamp(),
       });
     } catch (_) {
-      // Demo replies are optional; never block the real user's message.
+      // Demo reply is optional
     }
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: widget.clanService.streamClan(widget.clanId),
+      builder: (context, clanSnapshot) {
+        final data = clanSnapshot.data?.data() ?? {};
+        final name = data['name']?.toString() ?? 'Clan HQ';
+        final emoji = data['emoji']?.toString() ?? '🛡️';
+        final weeklyXp =
+            data['weeklyXp'] is num ? (data['weeklyXp'] as num).toInt() : 0;
+
+        return Scaffold(
+          backgroundColor: FqColors.scaffold,
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            leading: IconButton(
+              onPressed: widget.onBack,
+              icon: const Icon(Icons.arrow_back_rounded, color: FqColors.ink),
+            ),
+            title: Row(
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 22)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    name,
+                    overflow: TextOverflow.ellipsis,
+                    style: FqTypography.screenTitle(color: FqColors.ink).copyWith(
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            bottom: TabBar(
+              controller: _tabController,
+              labelColor: FqColors.primary,
+              unselectedLabelColor: const Color(0xFF747887),
+              indicatorColor: FqColors.primary,
+              indicatorWeight: 3,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 12,
+              ),
+              tabs: const [
+                Tab(text: 'LIVE CHAT'),
+                Tab(text: 'MEMBERS'),
+                Tab(text: 'CLAN WAR ⚔️'),
+              ],
+            ),
+          ),
+          body: Column(
+            children: [
+              // Clan Quick Stats Header
+              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: widget.clanService.streamMembers(widget.clanId),
+                builder: (context, memberSnapshot) {
+                  final realMembers = memberSnapshot.data?.docs.length ?? 0;
+                  final totalMembers = realMembers + _demoMembers.length;
+
+                  final realXp = memberSnapshot.data?.docs.fold<int>(
+                        0,
+                        (total, doc) {
+                          final value = doc.data()['weeklyXp'];
+                          return total + (value is num ? value.toInt() : 0);
+                        },
+                      ) ??
+                      weeklyXp;
+
+                  final totalXp = realXp + _demoWarPoints();
+
+                  return Container(
+                    margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE7E8EE)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _clanStatHeader('👥', '$totalMembers', 'MEMBERS'),
+                        Container(
+                          width: 1,
+                          height: 24,
+                          color: const Color(0xFFE7E8EE),
+                        ),
+                        _clanStatHeader('⚡', '$totalXp XP', 'WEEKLY SCORE'),
+                        Container(
+                          width: 1,
+                          height: 24,
+                          color: const Color(0xFFE7E8EE),
+                        ),
+                        _clanStatHeader('⚔️', 'DIV 1', 'WAR TIER'),
+                      ],
+                    ),
+                  );
+                },
+              ),
+
+              // Tab Content Views
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildChat(),
+                    _buildMembers(),
+                    _buildWar(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _clanStatHeader(String icon, String value, String label) {
+    return Column(
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(icon, style: const TextStyle(fontSize: 14)),
+            const SizedBox(width: 4),
+            Text(
+              value,
+              style: const TextStyle(
+                color: FqColors.ink,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF747887),
+            fontSize: 8.5,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // LIVE CHAT TAB
+  // ---------------------------------------------------------------------------
 
   Widget _buildChat() {
     return Column(
@@ -843,39 +1392,63 @@ class _ClanScreenState extends State<_ClanScreen>
             stream: widget.clanService.streamMessages(widget.clanId),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
+                return const Center(child: CircularProgressIndicator());
               }
 
               final docs = snapshot.data?.docs ?? [];
 
               if (docs.isEmpty) {
-                return const Center(
-                  child: Text(
-                    'No messages yet.\nStart the clan chat! 💬',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black45,
-                      fontWeight: FontWeight.w700,
-                    ),
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: FqColors.lavender,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.chat_bubble_outline_rounded,
+                          color: FqColors.primary,
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'No messages yet',
+                        style: TextStyle(
+                          color: FqColors.ink,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Say hi to your teammates below! 💬',
+                        style: TextStyle(
+                          color: Color(0xFF747887),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
                   ),
                 );
               }
 
               return ListView.builder(
                 reverse: true,
-                padding: const EdgeInsets.fromLTRB(15, 15, 15, 10),
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                 itemCount: docs.length,
                 itemBuilder: (context, index) {
                   final doc = docs[index];
                   final data = doc.data();
                   final senderId = data['senderId']?.toString() ?? '';
-                  final senderName =
-                      data['senderName']?.toString() ?? 'Student';
+                  final senderName = data['senderName']?.toString() ?? 'Student';
                   final text = data['text']?.toString() ?? '';
-                  final isMe =
-                      senderId == FirebaseAuth.instance.currentUser?.uid;
+                  final isMe = senderId == FirebaseAuth.instance.currentUser?.uid;
+                  final isDemo = data['isDemo'] == true;
 
                   final timestamp = data['createdAt'];
                   final time = timestamp is Timestamp
@@ -883,35 +1456,74 @@ class _ClanScreenState extends State<_ClanScreen>
                       : '';
 
                   return Align(
-                    alignment:
-                        isMe ? Alignment.centerRight : Alignment.centerLeft,
+                    alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
                     child: Container(
-                      constraints: const BoxConstraints(maxWidth: 320),
-                      margin: const EdgeInsets.only(bottom: 9),
-                      padding: const EdgeInsets.fromLTRB(13, 10, 13, 9),
+                      constraints: const BoxConstraints(maxWidth: 300),
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
                       decoration: BoxDecoration(
                         color: isMe ? FqColors.primary : Colors.white,
-                        borderRadius: BorderRadius.circular(17),
+                        borderRadius: BorderRadius.only(
+                          topLeft: const Radius.circular(18),
+                          topRight: const Radius.circular(18),
+                          bottomLeft: Radius.circular(isMe ? 18 : 4),
+                          bottomRight: Radius.circular(isMe ? 4 : 18),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: isMe
+                            ? CrossAxisAlignment.end
+                            : CrossAxisAlignment.start,
                         children: [
                           if (!isMe)
-                            Text(
-                              senderName,
-                              style: const TextStyle(
-                                color: FqColors.primaryMid,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w900,
-                              ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  senderName,
+                                  style: const TextStyle(
+                                    color: FqColors.primaryMid,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                if (isDemo) ...[
+                                  const SizedBox(width: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 1,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: FqColors.lavender,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text(
+                                      'BOT',
+                                      style: TextStyle(
+                                        color: FqColors.primary,
+                                        fontSize: 6.5,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           if (!isMe) const SizedBox(height: 3),
                           Text(
                             text,
                             style: TextStyle(
                               color: isMe ? Colors.white : FqColors.ink,
-                              fontSize: 12,
-                              height: 1.3,
+                              fontSize: 13,
+                              height: 1.35,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -920,8 +1532,9 @@ class _ClanScreenState extends State<_ClanScreen>
                             Text(
                               time,
                               style: TextStyle(
-                                color: isMe ? Colors.white54 : Colors.black38,
-                                fontSize: 8,
+                                color: isMe ? Colors.white60 : Colors.black38,
+                                fontSize: 8.5,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
@@ -934,11 +1547,22 @@ class _ClanScreenState extends State<_ClanScreen>
             },
           ),
         ),
+
+        // Chat Input Bar
         SafeArea(
           top: false,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -3),
+                ),
+              ],
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -949,26 +1573,44 @@ class _ClanScreenState extends State<_ClanScreen>
                     maxLines: 4,
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _sendMessage(),
+                    style: const TextStyle(
+                      color: FqColors.ink,
+                      fontSize: 13,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Message your clan...',
+                      hintStyle: const TextStyle(
+                        color: Color(0xFF8B8E99),
+                        fontSize: 12.5,
+                      ),
                       counterText: '',
                       filled: true,
                       fillColor: FqColors.scaffold,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(17),
+                        borderRadius: BorderRadius.circular(20),
                         borderSide: BorderSide.none,
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
-                IconButton.filled(
-                  onPressed: _sendMessage,
-                  style: IconButton.styleFrom(
-                    backgroundColor: FqColors.primary,
-                    foregroundColor: Colors.white,
+                Container(
+                  decoration: const BoxDecoration(
+                    color: FqColors.primary,
+                    shape: BoxShape.circle,
                   ),
-                  icon: const Icon(Icons.send_rounded),
+                  child: IconButton(
+                    onPressed: _sendMessage,
+                    icon: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -977,6 +1619,10 @@ class _ClanScreenState extends State<_ClanScreen>
       ],
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // MEMBERS TAB
+  // ---------------------------------------------------------------------------
 
   Widget _buildMembers() {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -988,79 +1634,114 @@ class _ClanScreenState extends State<_ClanScreen>
           return const Center(child: CircularProgressIndicator());
         }
 
-        final rows = <Widget>[];
+        final memberList = <Map<String, dynamic>>[];
 
         for (final doc in docs) {
           final data = doc.data();
           final name = data['name']?.toString() ?? 'Student';
           final role = data['role']?.toString() ?? 'member';
-          final xp =
-              data['weeklyXp'] is num ? (data['weeklyXp'] as num).toInt() : 0;
+          final xp = data['weeklyXp'] is num ? (data['weeklyXp'] as num).toInt() : 0;
+          final emoji = role == 'owner' ? '👑' : role == 'admin' ? '🛡️' : '🏃';
 
-          final emoji = role == 'owner'
-              ? '👑'
-              : role == 'admin'
-                  ? '🛡️'
-                  : '🏃';
-
-          rows.add(
-            _memberTile(
-              name: name,
-              role: role.toUpperCase(),
-              xp: xp,
-              emoji: emoji,
-              isDemo: false,
-            ),
-          );
+          memberList.add({
+            'name': name,
+            'role': role.toUpperCase(),
+            'xp': xp,
+            'emoji': emoji,
+            'isDemo': false,
+          });
         }
 
         for (final member in _demoMembers) {
-          rows.add(
-            _memberTile(
-              name: member['name'] as String,
-              role: 'DEMO MEMBER',
-              xp: member['weeklyXp'] as int,
-              emoji: member['emoji'] as String,
-              isDemo: true,
-            ),
-          );
+          memberList.add({
+            'name': member['name'] as String,
+            'role': 'MEMBER',
+            'xp': member['weeklyXp'] as int,
+            'emoji': member['emoji'] as String,
+            'isDemo': true,
+          });
         }
 
-        if (rows.isEmpty) {
-          return const Center(
-            child: Text(
-              'No members found.',
-              style: TextStyle(color: Colors.black45),
-            ),
-          );
-        }
+        // Sort by XP descending
+        memberList.sort((a, b) => (b['xp'] as int).compareTo(a['xp'] as int));
 
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(15, 15, 15, 25),
-          children: rows,
+        return ListView.builder(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          itemCount: memberList.length,
+          itemBuilder: (context, index) {
+            final m = memberList[index];
+            final rank = index + 1;
+
+            return _memberCard(
+              rank: rank,
+              name: m['name'] as String,
+              role: m['role'] as String,
+              xp: m['xp'] as int,
+              emoji: m['emoji'] as String,
+              isDemo: m['isDemo'] as bool,
+            );
+          },
         );
       },
     );
   }
 
-  Widget _memberTile({
+  Widget _memberCard({
+    required int rank,
     required String name,
     required String role,
     required int xp,
     required String emoji,
     required bool isDemo,
   }) {
+    Color? rankBadgeColor;
+    if (rank == 1) rankBadgeColor = const Color(0xFFFFD700);
+    if (rank == 2) rankBadgeColor = const Color(0xFFC0C0C0);
+    if (rank == 3) rankBadgeColor = const Color(0xFFCD7F32);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 9),
       padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(17),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE7E8EE)),
       ),
       child: Row(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 24)),
-          const SizedBox(width: 11),
+          // Rank Medal or Position
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: rankBadgeColor != null
+                  ? rankBadgeColor.withValues(alpha: 0.2)
+                  : FqColors.scaffold,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                rank <= 3 ? (rank == 1 ? '🥇' : rank == 2 ? '🥈' : '🥉') : '#$rank',
+                style: TextStyle(
+                  fontSize: rank <= 3 ? 14 : 10,
+                  fontWeight: FontWeight.w900,
+                  color: rank <= 3 ? Colors.black : const Color(0xFF747887),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+
+          // Avatar
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: FqColors.lavender,
+            child: Text(emoji, style: const TextStyle(fontSize: 18)),
+          ),
+          const SizedBox(width: 10),
+
+          // Name and Role
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1070,30 +1751,31 @@ class _ClanScreenState extends State<_ClanScreen>
                     Flexible(
                       child: Text(
                         name,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: FqColors.ink,
-                          fontSize: 12,
+                          fontSize: 13,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
                     ),
                     if (isDemo) ...[
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 5),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 5,
-                          vertical: 2,
+                          horizontal: 4,
+                          vertical: 1,
                         ),
                         decoration: BoxDecoration(
                           color: FqColors.lavender,
-                          borderRadius: BorderRadius.circular(5),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Text(
                           'DEMO',
                           style: TextStyle(
-                            color: FqColors.primaryMid,
-                            fontSize: 6,
+                            color: FqColors.primary,
+                            fontSize: 6.5,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -1101,25 +1783,37 @@ class _ClanScreenState extends State<_ClanScreen>
                     ],
                   ],
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Text(
                   role,
                   style: const TextStyle(
-                    color: Colors.black38,
-                    fontSize: 8,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: .7,
+                    color: Color(0xFF747887),
+                    fontSize: 8.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.6,
                   ),
                 ),
               ],
             ),
           ),
-          Text(
-            '$xp XP',
-            style: const TextStyle(
-              color: FqColors.primaryMid,
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
+
+          // XP Contribution
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 4,
+            ),
+            decoration: BoxDecoration(
+              color: FqColors.lavender,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '+$xp XP',
+              style: const TextStyle(
+                color: FqColors.primary,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ],
@@ -1127,81 +1821,189 @@ class _ClanScreenState extends State<_ClanScreen>
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // CLAN WAR TAB (ARENA)
+  // ---------------------------------------------------------------------------
+
   Widget _buildWar() {
     final myPoints = _myWarPoints() + _demoWarPoints();
     const opponentPoints = 780;
+    final totalPoints = (myPoints + opponentPoints).clamp(1, 99999);
+    final myShare = (myPoints / totalPoints).clamp(0.05, 0.95);
     final myClanWins = myPoints >= opponentPoints;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(15, 18, 15, 30),
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
       child: Column(
         children: [
+          // Arena Battle Card
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(22),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: FqColors.heroGradient,
+                colors: [Color(0xFF1E1B4B), Color(0xFF302B63), Color(0xFF51489A)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              borderRadius: FqRadii.heroBorder,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF1E1B4B).withValues(alpha: 0.25),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
             child: Column(
               children: [
-                const Text('⚔️', style: TextStyle(fontSize: 42)),
-                const SizedBox(height: 7),
-                const Text(
-                  'WEEKLY CLAN WAR',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 16),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      child: _warScore(
-                        'YOUR CLAN',
-                        myPoints,
-                        myClanWins,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
                       ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        'VS',
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text(
+                        'ROUND 3 OF 4',
                         style: TextStyle(
-                          color: Colors.white54,
+                          color: Colors.white,
+                          fontSize: 8.5,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
                     ),
-                    Expanded(
-                      child: _warScore(
-                        'RIVAL CLAN',
-                        opponentPoints,
-                        !myClanWins,
-                      ),
+                    const Row(
+                      children: [
+                        Icon(Icons.timer_outlined, color: Colors.white70, size: 13),
+                        SizedBox(width: 4),
+                        Text(
+                          'Ends in 2d 14h',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
+
+                // Teams Score Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          const Text('🛡️', style: TextStyle(fontSize: 32)),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'YOUR CLAN',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '$myPoints',
+                            style: const TextStyle(
+                              color: FqColors.accent,
+                              fontSize: 26,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Text(
+                      'VS',
+                      style: TextStyle(
+                        color: Colors.white38,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          const Text('⚔️', style: TextStyle(fontSize: 32)),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'RIVAL CLAN',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '$opponentPoints',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 26,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+
+                // Tug of War Progress Bar
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    height: 10,
+                    width: double.infinity,
+                    color: Colors.white.withValues(alpha: 0.15),
+                    child: Row(
+                      children: [
+                        Flexible(
+                          flex: (myShare * 100).toInt(),
+                          child: Container(color: FqColors.accent),
+                        ),
+                        Flexible(
+                          flex: ((1 - myShare) * 100).toInt(),
+                          child: Container(color: const Color(0xFFEF4444)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // Lead Status Badge
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 7,
+                    horizontal: 14,
+                    vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: .12),
-                    borderRadius: FqRadii.chipBorder,
+                    color: myClanWins
+                        ? FqColors.accent.withValues(alpha: 0.25)
+                        : Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    myClanWins ? '🔥 YOUR CLAN IS LEADING' : '💪 KEEP PUSHING',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 9,
+                    myClanWins
+                        ? '🔥 YOUR CLAN IS LEADING BY ${myPoints - opponentPoints} PTS'
+                        : '💪 OPPONENT LEADING BY ${opponentPoints - myPoints} PTS',
+                    style: TextStyle(
+                      color: myClanWins ? FqColors.accent : Colors.white,
+                      fontSize: 9.5,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -1209,18 +2011,31 @@ class _ClanScreenState extends State<_ClanScreen>
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
+
+          // User Contribution Card
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(15),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFE7E8EE)),
             ),
             child: Row(
               children: [
-                const Text('🏆', style: TextStyle(fontSize: 25)),
-                const SizedBox(width: 11),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF7E6),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: const Center(
+                    child: Text('🌟', style: TextStyle(fontSize: 22)),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1228,117 +2043,68 @@ class _ClanScreenState extends State<_ClanScreen>
                       const Text(
                         'YOUR CONTRIBUTION',
                         style: TextStyle(
-                          color: Colors.black38,
-                          fontSize: 8,
+                          color: Color(0xFF747887),
+                          fontSize: 8.5,
                           fontWeight: FontWeight.w900,
-                          letterSpacing: .8,
+                          letterSpacing: 0.7,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       Text(
-                        '${_myWarPoints()} war points',
+                        '${_myWarPoints()} War Points Earned',
                         style: const TextStyle(
                           color: FqColors.ink,
-                          fontSize: 13,
+                          fontSize: 14,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Text(
-                  'LIVE',
-                  style: TextStyle(
-                    color: FqColors.primaryMid,
-                    fontSize: 8,
-                    fontWeight: FontWeight.w900,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: FqColors.lavender,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    'LIVE',
+                    style: TextStyle(
+                      color: FqColors.primary,
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 14),
-          _warRule(
-            '🏃',
-            'Workouts',
-            'Weekly fitness activity adds war points.',
-          ),
-          _warRule(
-            '🧠',
-            'Quizzes',
-            'Completing a quiz adds to your contribution.',
-          ),
-          _warRule(
-            '🎯',
-            'Quests',
-            'Your existing weekly activity feeds the prototype war score.',
-          ),
-          _warRule(
-            '🏆',
-            'Weekly ranking',
-            'Highest clan score wins the weekly battle.',
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Prototype war mode • rival score is simulated for demo',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.black38,
-              fontSize: 8,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+
+          // War Scoring Rules
+          _warRuleTile('🏃', 'Workouts & Runs', 'Every 20 mins of activity awards +50 War Points.'),
+          _warRuleTile('🧠', 'Wellness Quiz', 'Complete weekly quizzes for +50 War Points.'),
+          _warRuleTile('🎯', 'Daily Quests', 'Daily student quests boost your clan total score.'),
         ],
       ),
     );
   }
 
-  Widget _warScore(String label, int score, bool winning) {
-    return Column(
-      children: [
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 8,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          '$score',
-          style: TextStyle(
-            color: winning ? FqColors.accent : Colors.white,
-            fontSize: 25,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        if (winning)
-          const Text(
-            'LEADING',
-            style: TextStyle(
-              color: FqColors.accent,
-              fontSize: 7,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _warRule(String emoji, String title, String text) {
+  Widget _warRuleTile(String emoji, String title, String desc) {
     return Container(
-      width: double.infinity,
       margin: const EdgeInsets.only(bottom: 9),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(17),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE7E8EE)),
       ),
       child: Row(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 23)),
+          Text(emoji, style: const TextStyle(fontSize: 20)),
           const SizedBox(width: 11),
           Expanded(
             child: Column(
@@ -1348,17 +2114,16 @@ class _ClanScreenState extends State<_ClanScreen>
                   title,
                   style: const TextStyle(
                     color: FqColors.ink,
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Text(
-                  text,
+                  desc,
                   style: const TextStyle(
-                    color: Colors.black45,
-                    fontSize: 9,
-                    height: 1.3,
+                    color: Color(0xFF747887),
+                    fontSize: 10,
                   ),
                 ),
               ],
@@ -1380,9 +2145,6 @@ class _ClanScreenState extends State<_ClanScreen>
         clanId: widget.clanId,
         text: text,
       );
-
-      // Prototype presentation mode: simulate a natural clan reply.
-      // The reply is stored in Firestore so both signed-in accounts see it.
       await _sendDemoReply(text);
     } catch (e) {
       if (mounted) {

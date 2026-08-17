@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../theme/fq_colors.dart';
+import '../theme/fq_typography.dart';
 import 'student_home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -26,11 +28,31 @@ class _LoginScreenState extends State<LoginScreen> {
 
   String selectedHouse = 'Phoenix';
 
-  final List<String> houses = const [
-    'Phoenix',
-    'Titan',
-    'Falcon',
-    'Dragon',
+  final List<Map<String, dynamic>> houses = const [
+    {
+      'name': 'Phoenix',
+      'emoji': '🦁',
+      'color': Color(0xFFFF7545),
+      'desc': 'Courage & Power',
+    },
+    {
+      'name': 'Titan',
+      'emoji': '🛡️',
+      'color': Color(0xFF3B82F6),
+      'desc': 'Strength & Grit',
+    },
+    {
+      'name': 'Falcon',
+      'emoji': '🦅',
+      'color': Color(0xFF10B981),
+      'desc': 'Speed & Focus',
+    },
+    {
+      'name': 'Dragon',
+      'emoji': '🐉',
+      'color': Color(0xFF8B5CF6),
+      'desc': 'Wisdom & Flame',
+    },
   ];
 
   Future<void> _submit() async {
@@ -40,14 +62,23 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = passwordController.text.trim();
 
     if (isCreatingAccount) {
-      if (name.isEmpty || schoolId.isEmpty) {
-        _showMessage('Please enter your name and school ID.');
+      if (name.isEmpty) {
+        _showMessage('Please enter your full student name.');
+        return;
+      }
+      if (schoolId.isEmpty) {
+        _showMessage('Please enter your School Student ID.');
         return;
       }
     }
 
-    if (email.isEmpty || password.isEmpty) {
-      _showMessage('Please enter your email and password.');
+    if (email.isEmpty || !email.contains('@')) {
+      _showMessage('Please enter a valid email address.');
+      return;
+    }
+
+    if (password.isEmpty) {
+      _showMessage('Please enter your password.');
       return;
     }
 
@@ -95,9 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final user = credential.user;
 
         if (user != null) {
-          final profileRef =
-              _firestore.collection('users').doc(user.uid);
-
+          final profileRef = _firestore.collection('users').doc(user.uid);
           final profile = await profileRef.get();
 
           if (!profile.exists) {
@@ -134,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
           message = 'Please enter a valid email address.';
           break;
         case 'user-not-found':
-          message = 'No account was found for this email.';
+          message = 'No account found with this email.';
           break;
         case 'wrong-password':
         case 'invalid-credential':
@@ -144,24 +173,22 @@ class _LoginScreenState extends State<LoginScreen> {
           message = 'An account already exists with this email.';
           break;
         case 'weak-password':
-          message = 'Choose a stronger password.';
+          message = 'Please choose a stronger password.';
           break;
         case 'too-many-requests':
-          message = 'Too many attempts. Please try again later.';
+          message = 'Too many attempts. Please wait a moment.';
           break;
         case 'network-request-failed':
-          message = 'Network error. Check your internet connection.';
+          message = 'Network error. Please check your connection.';
           break;
       }
 
       if (mounted) _showMessage(message);
     } on FirebaseException catch (e) {
       if (mounted) {
-        _showMessage(
-          e.message ?? 'Could not save your FitQuest profile.',
-        );
+        _showMessage(e.message ?? 'Could not save your FitQuest profile.');
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         _showMessage('Something went wrong. Please try again.');
       }
@@ -177,10 +204,29 @@ class _LoginScreenState extends State<LoginScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(message),
+          content: Row(
+            children: [
+              const Icon(Icons.info_outline_rounded, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text(message)),
+            ],
+          ),
           behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: FqColors.ink,
         ),
       );
+  }
+
+  void _quickFillDemo() {
+    setState(() {
+      emailController.text = 'student@school.edu';
+      passwordController.text = 'password123';
+      if (isCreatingAccount) {
+        nameController.text = 'Alex Morgan';
+        schoolIdController.text = 'STU-2048';
+      }
+    });
   }
 
   @override
@@ -195,268 +241,192 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: const Color(0xFF151B3D),
-      ),
+      backgroundColor: FqColors.scaffold,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(28, 30, 28, 30),
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                isCreatingAccount
-                    ? 'Create your account 🚀'
-                    : 'Welcome back! 👋',
-                style: const TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF151B3D),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                isCreatingAccount
-                    ? 'Set up your FitQuest student profile.'
-                    : 'Sign in to your FitQuest account.',
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.black54,
-                ),
-              ),
-              const SizedBox(height: 35),
+              // 1. BRAND HEADER
+              _buildBrandHeader(),
+              const SizedBox(height: 22),
 
-              if (isCreatingAccount) ...[
-                const Text(
-                  'NAME',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1,
-                    color: Color(0xFF555A72),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: nameController,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: InputDecoration(
-                    hintText: 'Your name',
-                    prefixIcon: const Icon(Icons.person_outline),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'SCHOOL ID',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1,
-                    color: Color(0xFF555A72),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: schoolIdController,
-                  textCapitalization: TextCapitalization.characters,
-                  decoration: InputDecoration(
-                    hintText: 'e.g. STU1001',
-                    prefixIcon: const Icon(Icons.badge_outlined),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'HOUSE',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1,
-                    color: Color(0xFF555A72),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  initialValue: selectedHouse,
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.shield_outlined),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  items: houses
-                      .map(
-                        (house) => DropdownMenuItem<String>(
-                          value: house,
-                          child: Text(house),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: isLoading
-                      ? null
-                      : (value) {
-                          if (value != null) {
-                            setState(() => selectedHouse = value);
-                          }
-                        },
-                ),
-                const SizedBox(height: 20),
-              ],
-
-              const Text(
-                'EMAIL',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1,
-                  color: Color(0xFF555A72),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
-                autocorrect: false,
-                decoration: InputDecoration(
-                  hintText: 'student@school.edu',
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
+              // 2. SEGMENTED SWITCHER (Sign In vs Create Account)
+              _buildAuthSwitcher(),
               const SizedBox(height: 20),
-              const Text(
-                'PASSWORD',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1,
-                  color: Color(0xFF555A72),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: passwordController,
-                obscureText: obscurePassword,
-                decoration: InputDecoration(
-                  hintText: 'Enter password',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        obscurePassword = !obscurePassword;
-                      });
-                    },
-                    icon: Icon(
-                      obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
+
+              // 3. MAIN FORM CARD
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: const Color(0xFFE7E8EE)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
                     ),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 30),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: isLoading ? null : _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF302B63),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Dynamic Form Title
+                    Text(
+                      isCreatingAccount
+                          ? 'Create Student Account'
+                          : 'Sign In to Your Account',
+                      style: const TextStyle(
+                        color: FqColors.ink,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
-                  ),
-                  child: isLoading
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          isCreatingAccount
-                              ? 'CREATE FITQUEST ACCOUNT'
-                              : 'LOGIN TO FITQUEST',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.8,
+                    const SizedBox(height: 4),
+                    Text(
+                      isCreatingAccount
+                          ? 'Join your school house and track daily fitness quests'
+                          : 'Access your student dashboard, streaks, and clan rank',
+                      style: const TextStyle(
+                        color: Color(0xFF747887),
+                        fontSize: 11.5,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Registration Extra Fields (Name, School ID, House)
+                    if (isCreatingAccount) ...[
+                      _buildTextField(
+                        controller: nameController,
+                        label: 'FULL NAME',
+                        hintText: 'e.g. Alex Morgan',
+                        icon: Icons.person_outline_rounded,
+                        capitalization: TextCapitalization.words,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        controller: schoolIdController,
+                        label: 'SCHOOL STUDENT ID',
+                        hintText: 'e.g. STU-2048',
+                        icon: Icons.badge_outlined,
+                        capitalization: TextCapitalization.characters,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildHouseSelector(),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // Common Fields (Email, Password)
+                    _buildTextField(
+                      controller: emailController,
+                      label: 'STUDENT EMAIL',
+                      hintText: 'student@school.edu',
+                      icon: Icons.alternate_email_rounded,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildPasswordField(),
+                    const SizedBox(height: 24),
+
+                    // Submit Action Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: isLoading ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: FqColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
                         ),
+                        child: isLoading
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    isCreatingAccount
+                                        ? 'CREATE FITQUEST ACCOUNT'
+                                        : 'SIGN IN TO FITQUEST',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 0.7,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Icon(Icons.arrow_forward_rounded, size: 18),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
+
+              // 4. DEMO AUTO-FILL HELPER
               Center(
-                child: TextButton(
-                  onPressed: isLoading
-                      ? null
-                      : () {
-                          setState(() {
-                            isCreatingAccount = !isCreatingAccount;
-                          });
-                        },
-                  child: Text(
-                    isCreatingAccount
-                        ? 'Already have an account? Log in'
-                        : 'New to FitQuest? Create an account',
-                    style: const TextStyle(
-                      color: Color(0xFF302B63),
-                      fontWeight: FontWeight.w700,
+                child: TextButton.icon(
+                  onPressed: _quickFillDemo,
+                  icon: const Icon(
+                    Icons.auto_fix_high_rounded,
+                    size: 16,
+                    color: FqColors.primaryMid,
+                  ),
+                  label: const Text(
+                    'Auto-fill Demo Credentials',
+                    style: TextStyle(
+                      color: FqColors.primaryMid,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
+
+              // 5. SECURITY & SCHOOL TRUST BADGE
               Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEDEBFF),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE7E8EE)),
                 ),
                 child: const Row(
                   children: [
                     Icon(
-                      Icons.shield_outlined,
-                      color: Color(0xFF302B63),
+                      Icons.verified_user_rounded,
+                      color: FqColors.success,
+                      size: 20,
                     ),
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Your FitQuest account belongs to your school community.',
+                        'Secure school authenticated portal. Fitness data is protected under student privacy guidelines.',
                         style: TextStyle(
-                          color: Color(0xFF302B63),
-                          fontSize: 13,
+                          color: Color(0xFF64748B),
+                          fontSize: 10.5,
+                          height: 1.35,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -467,6 +437,373 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // BRAND HEADER
+  // ---------------------------------------------------------------------------
+
+  Widget _buildBrandHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF302B63), Color(0xFF51489A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF302B63).withValues(alpha: 0.22),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: FqColors.accent.withValues(alpha: 0.5),
+                width: 2,
+              ),
+            ),
+            child: const Center(
+              child: Text('⚡', style: TextStyle(fontSize: 28)),
+            ),
+          ),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'FITQUEST',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                SizedBox(height: 3),
+                Text(
+                  'Level Up Your Campus Fitness',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // AUTH SWITCHER (Sign In vs Create Account)
+  // ---------------------------------------------------------------------------
+
+  Widget _buildAuthSwitcher() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE7E8EE)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _switcherButton(
+              title: 'Sign In',
+              icon: Icons.login_rounded,
+              isSelected: !isCreatingAccount,
+              onTap: () {
+                if (isCreatingAccount) {
+                  setState(() => isCreatingAccount = false);
+                }
+              },
+            ),
+          ),
+          Expanded(
+            child: _switcherButton(
+              title: 'Create Account',
+              icon: Icons.person_add_rounded,
+              isSelected: isCreatingAccount,
+              onTap: () {
+                if (!isCreatingAccount) {
+                  setState(() => isCreatingAccount = true);
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _switcherButton({
+    required String title,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? FqColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: FqColors.primary.withValues(alpha: 0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 15,
+                color: isSelected ? Colors.white : const Color(0xFF747887),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : const Color(0xFF555A72),
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // HOUSE SELECTOR (Registration)
+  // ---------------------------------------------------------------------------
+
+  Widget _buildHouseSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'SELECT SCHOOL HOUSE',
+          style: FqTypography.sectionLabel(color: FqColors.muted),
+        ),
+        const SizedBox(height: 8),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: houses.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 2.3,
+          ),
+          itemBuilder: (context, index) {
+            final h = houses[index];
+            final name = h['name'] as String;
+            final emoji = h['emoji'] as String;
+            final color = h['color'] as Color;
+            final isSelected = selectedHouse == name;
+
+            return Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => setState(() => selectedHouse = name),
+                borderRadius: BorderRadius.circular(14),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected ? color.withValues(alpha: 0.12) : FqColors.scaffold,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isSelected ? color : const Color(0xFFE7E8EE),
+                      width: isSelected ? 1.8 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(emoji, style: const TextStyle(fontSize: 20)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              name,
+                              style: TextStyle(
+                                color: isSelected ? color : FqColors.ink,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            Text(
+                              h['desc'] as String,
+                              style: const TextStyle(
+                                color: Color(0xFF747887),
+                                fontSize: 8.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (isSelected)
+                        Icon(Icons.check_circle_rounded, color: color, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // INPUT FIELD HELPERS
+  // ---------------------------------------------------------------------------
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hintText,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+    TextCapitalization capitalization = TextCapitalization.none,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: FqTypography.sectionLabel(color: FqColors.muted),
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          textCapitalization: capitalization,
+          style: const TextStyle(
+            color: FqColors.ink,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: const TextStyle(
+              color: Color(0xFF94A3B8),
+              fontSize: 12.5,
+              fontWeight: FontWeight.w500,
+            ),
+            prefixIcon: Icon(icon, color: const Color(0xFF64748B), size: 18),
+            filled: true,
+            fillColor: FqColors.scaffold,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: FqColors.primary, width: 1.5),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'PASSWORD',
+          style: FqTypography.sectionLabel(color: FqColors.muted),
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: passwordController,
+          obscureText: obscurePassword,
+          style: const TextStyle(
+            color: FqColors.ink,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+          decoration: InputDecoration(
+            hintText: 'Enter at least 6 characters',
+            hintStyle: const TextStyle(
+              color: Color(0xFF94A3B8),
+              fontSize: 12.5,
+              fontWeight: FontWeight.w500,
+            ),
+            prefixIcon: const Icon(
+              Icons.lock_outline_rounded,
+              color: Color(0xFF64748B),
+              size: 18,
+            ),
+            suffixIcon: IconButton(
+              onPressed: () => setState(() => obscurePassword = !obscurePassword),
+              icon: Icon(
+                obscurePassword
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
+                color: const Color(0xFF64748B),
+                size: 18,
+              ),
+            ),
+            filled: true,
+            fillColor: FqColors.scaffold,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: FqColors.primary, width: 1.5),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

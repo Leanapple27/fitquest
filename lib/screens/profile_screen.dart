@@ -2,14 +2,15 @@ import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'activity_calendar_screen.dart';
-import 'nutrition_screen.dart';
-
-import '../theme/theme.dart';
 
 import '../app_state.dart';
-import 'rewards_screen.dart';
+import '../theme/fq_colors.dart';
+import '../theme/fq_radii.dart';
+import '../theme/fq_typography.dart';
+import 'activity_calendar_screen.dart';
+import 'nutrition_screen.dart';
 import 'privacy_safety_screen.dart';
+import 'rewards_screen.dart';
 import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -210,67 +211,116 @@ class _ProfileScreenState extends State<ProfileScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: FqColors.scaffold,
       appBar: AppBar(
-        title: const Text('Profile'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 1,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: FqColors.lavender,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.person_rounded,
+                color: FqColors.primary,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 9),
+            Text(
+              'Profile',
+              style: FqTypography.screenTitle(color: FqColors.ink).copyWith(
+                fontSize: 20,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const SettingsScreen(),
+                ),
+              );
+            },
+            icon: const Icon(
+              Icons.settings_outlined,
+              color: FqColors.ink,
+            ),
+          ),
+        ],
       ),
       body: Stack(
         children: [
           RefreshIndicator(
             onRefresh: _loadProfile,
             child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(FqSpacing.page,
-                  FqSpacing.pageTop, FqSpacing.page, FqSpacing.pageBottom),
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
               children: [
+                // 1. Profile Hero & Avatar
                 _buildProfileHeader(),
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
+
+                // 2. Main Stats Grid
                 _buildStats(),
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
+
+                // 3. Health & Vitals Snapshot
+                _buildHealthSnapshotCard(),
+                const SizedBox(height: 16),
+
+                // 4. Trackers & Wellness Section
                 _buildSection(
-                  title: 'HEALTH & WELLNESS',
+                  title: 'TRACKERS & WELLNESS',
                   children: [
                     _buildMenuItem(
-  iconData: Icons.calendar_month_rounded,
-  title: 'Activity Calendar',
-  subtitle: 'Track completed, skipped and upcoming events',
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const ActivityCalendarScreen(),
-      ),
-    );
-  },
-),
-_buildMenuItem(
-  iconData: Icons.restaurant_rounded,
-  title: 'Nutrition Tracker',
-  subtitle: 'Track meals and understand your daily nutrition',
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const NutritionScreen(),
-      ),
-    );
-  },
-),
+                      iconData: Icons.calendar_month_rounded,
+                      iconColor: const Color(0xFF3B82F6),
+                      title: 'Activity Calendar',
+                      subtitle: 'Track workout streak and upcoming events',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ActivityCalendarScreen(),
+                          ),
+                        );
+                      },
+                    ),
                     _buildMenuItem(
-                      iconData: Icons.monitor_heart_rounded,
-                      title: 'Health Profile',
-                      subtitle: _healthProfileSubtitle(),
-                      onTap: _showHealthProfileSheet,
+                      iconData: Icons.restaurant_rounded,
+                      iconColor: const Color(0xFF10B981),
+                      title: 'Nutrition Tracker',
+                      subtitle: 'Log meals, water intake and dietary balance',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const NutritionScreen(),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
+
+                // 5. Rewards & Milestones
                 _buildSection(
-                  title: 'REWARDS',
+                  title: 'REWARDS & HOUSE',
                   children: [
                     _buildMenuItem(
-                      icon: '🏆',
-                      title: 'Badges',
-                      subtitle: '$badges badges earned',
+                      iconData: Icons.emoji_events_rounded,
+                      iconColor: const Color(0xFFF59E0B),
+                      title: 'Badges & Achievements',
+                      subtitle: '$badges badges earned so far',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -283,7 +333,8 @@ _buildMenuItem(
                       },
                     ),
                     _buildMenuItem(
-                      icon: '🎟️',
+                      iconData: Icons.local_activity_rounded,
+                      iconColor: const Color(0xFF8B5CF6),
                       title: 'Sticker Collection',
                       subtitle: '$stickers stickers collected',
                       onTap: () {
@@ -298,21 +349,25 @@ _buildMenuItem(
                       },
                     ),
                     _buildMenuItem(
-                      icon: '🏠',
+                      iconData: Icons.shield_rounded,
+                      iconColor: FqColors.energy,
                       title: '$house House',
-                      subtitle: 'Your school house',
+                      subtitle: 'School house affiliation',
                       onTap: () {},
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
+
+                // 6. Privacy & Safety
                 _buildSection(
-                  title: 'PRIVACY & SAFETY',
+                  title: 'PRIVACY & SECURITY',
                   children: [
                     _buildMenuItem(
-                      icon: '🛡️',
-                      title: 'Privacy',
-                      subtitle: 'Control what others can see',
+                      iconData: Icons.lock_outline_rounded,
+                      iconColor: FqColors.primaryMid,
+                      title: 'Privacy Controls',
+                      subtitle: 'Control student visibility and consent',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -323,9 +378,10 @@ _buildMenuItem(
                       },
                     ),
                     _buildMenuItem(
-                      icon: '🔒',
+                      iconData: Icons.verified_user_outlined,
+                      iconColor: FqColors.success,
                       title: 'Safety Centre',
-                      subtitle: 'Learn how FitQuest keeps you safe',
+                      subtitle: 'Student safety standards and rules',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -337,21 +393,24 @@ _buildMenuItem(
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
+
+                // 7. Account & Settings
                 _buildSection(
                   title: 'ACCOUNT',
                   children: [
                     _buildMenuItem(
-                      icon: '🏫',
-                      title: 'School Account',
-                      subtitle:
-                          schoolId.isEmpty ? 'School ID not set' : schoolId,
+                      iconData: Icons.school_rounded,
+                      iconColor: const Color(0xFF64748B),
+                      title: 'School ID',
+                      subtitle: schoolId.isEmpty ? 'Not assigned' : schoolId,
                       onTap: () {},
                     ),
                     _buildMenuItem(
-                      icon: '⚙️',
-                      title: 'Settings',
-                      subtitle: 'App preferences',
+                      iconData: Icons.settings_rounded,
+                      iconColor: const Color(0xFF64748B),
+                      title: 'App Settings',
+                      subtitle: 'Notifications and preferences',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -363,22 +422,23 @@ _buildMenuItem(
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
+
+                // Log out Button
                 SizedBox(
                   width: double.infinity,
-                  height: 50,
-                  child: OutlinedButton(
+                  height: 48,
+                  child: OutlinedButton.icon(
                     onPressed: _logout,
+                    icon: const Icon(Icons.logout_rounded, size: 18),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: FqColors.danger,
-                      side: const BorderSide(
-                        color: FqColors.danger,
-                      ),
+                      side: const BorderSide(color: Color(0xFFFCA5A5)),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text(
+                    label: const Text(
                       'LOG OUT',
                       style: TextStyle(
                         fontWeight: FontWeight.w900,
@@ -396,297 +456,9 @@ _buildMenuItem(
     );
   }
 
-  Widget _buildLevelUpOverlay() {
-    final level = _lastKnownLevel ?? 1;
-
-    return Positioned.fill(
-      child: Material(
-        color: Colors.black.withValues(alpha: 0.70),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // Expanding glow behind the celebration.
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 900),
-              curve: Curves.easeOut,
-              builder: (context, value, child) {
-                return Container(
-                  width: 180 + (170 * value),
-                  height: 180 + (170 * value),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color:
-                        FqColors.accent.withValues(alpha: 0.04 * (1 - value)),
-                    border: Border.all(
-                      color:
-                          FqColors.accent.withValues(alpha: 0.24 * (1 - value)),
-                      width: 2,
-                    ),
-                  ),
-                );
-              },
-            ),
-
-            // Sparkles around the reward card.
-            ...List.generate(8, (index) {
-              final angles = <double>[
-                -2.8,
-                -2.15,
-                -1.45,
-                -0.65,
-                0.05,
-                0.75,
-                1.55,
-                2.35,
-              ];
-
-              return TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.0, end: 1.0),
-                duration: Duration(milliseconds: 550 + (index * 55)),
-                curve: Curves.easeOutBack,
-                builder: (context, value, child) {
-                  final distance = 135.0 * value;
-                  return Transform.translate(
-                    offset: Offset(
-                      math.cos(angles[index]) * distance,
-                      math.sin(angles[index]) * distance,
-                    ),
-                    child: Opacity(
-                      opacity: (1.0 - value * 0.55).clamp(0.0, 1.0),
-                      child: Transform.scale(
-                        scale: 0.4 + (0.8 * value),
-                        child: child,
-                      ),
-                    ),
-                  );
-                },
-                child: Icon(
-                  index.isEven
-                      ? Icons.auto_awesome_rounded
-                      : Icons.star_rounded,
-                  color: index.isEven ? FqColors.accent : Colors.white,
-                  size: index.isEven ? 22 : 15,
-                ),
-              );
-            }),
-
-            // Main celebration card.
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.55, end: 1.0),
-              duration: const Duration(milliseconds: 650),
-              curve: Curves.elasticOut,
-              builder: (context, scale, child) {
-                return Transform.scale(
-                  scale: scale,
-                  child: child,
-                );
-              },
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 27),
-                padding: const EdgeInsets.fromLTRB(22, 20, 22, 20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: FqColors.accent,
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: FqColors.accent.withValues(alpha: 0.30),
-                      blurRadius: 40,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0.0, end: 1.0),
-                      duration: const Duration(milliseconds: 700),
-                      curve: Curves.elasticOut,
-                      builder: (context, value, child) {
-                        return Transform.translate(
-                          offset: Offset(
-                            0,
-                            -18 * math.sin(value * math.pi),
-                          ),
-                          child: Transform.scale(
-                            scale: 0.65 + (0.35 * value),
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: Container(
-                        width: 108,
-                        height: 108,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: FqColors.lavender,
-                          border: Border.all(
-                            color: FqColors.accent,
-                            width: 5,
-                          ),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            '🏆',
-                            style: TextStyle(fontSize: 53),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    const Text(
-                      'LEVEL UP!',
-                      style: TextStyle(
-                        color: FqColors.primary,
-                        fontSize: 29,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'LEVEL $level',
-                      style: const TextStyle(
-                        color: FqColors.energy,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.3,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 13,
-                      ),
-                      decoration: BoxDecoration(
-                        color: FqColors.lavender,
-                        borderRadius: BorderRadius.circular(17),
-                      ),
-                      child: Column(
-                        children: [
-                          const Text(
-                            'NEW REWARD',
-                            style: TextStyle(
-                              color: Colors.black45,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            _levelUpReward,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: FqColors.ink,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 17),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () {
-                              setState(() {
-                                _showLevelUp = false;
-                                _avatarCelebrating = false;
-                              });
-                            },
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: FqColors.primary,
-                              side: const BorderSide(
-                                color: FqColors.primary,
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 13,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                            ),
-                            child: const Text(
-                              'LATER',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 9),
-                        Expanded(
-                          child: FilledButton(
-                            onPressed: () async {
-                              await _equipLevelReward();
-                              if (!mounted) return;
-                              setState(() {
-                                _showLevelUp = false;
-                                _avatarCelebrating = false;
-                              });
-                            },
-                            style: FilledButton.styleFrom(
-                              backgroundColor: FqColors.primary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 13,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                            ),
-                            child: const Text(
-                              'EQUIP NOW',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showLevelUpCelebration(int level) {
-    final reward = switch (level) {
-      2 => 'Runner Outfit Unlocked',
-      3 => 'Cricket Outfit Unlocked',
-      4 => 'Football Outfit Unlocked',
-      5 => 'Gold Frame Unlocked',
-      7 => 'Fitness Buddy Banner Unlocked',
-      10 => 'Champion Reward Unlocked',
-      _ => 'New Fitness Reward Unlocked',
-    };
-
-    setState(() {
-      _levelUpReward = reward;
-      _showLevelUp = true;
-      _avatarCelebrating = true;
-    });
-
-    _avatarAnimationController
-      ..reset()
-      ..forward();
-  }
+  // ---------------------------------------------------------------------------
+  // PROFILE HEADER (Identity + Avatar + Level Progress)
+  // ---------------------------------------------------------------------------
 
   Widget _buildProfileHeader() {
     final level = (xp ~/ 250) + 1;
@@ -695,322 +467,674 @@ _buildMenuItem(
     final progress =
         ((xp - levelStart) / (nextLevel - levelStart)).clamp(0.0, 1.0);
 
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.94, end: 1.0),
-      duration: const Duration(milliseconds: 550),
-      curve: Curves.easeOutBack,
-      builder: (context, scale, child) {
-        return Transform.scale(
-          scale: scale,
-          child: child,
-        );
-      },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-        decoration: BoxDecoration(
-          color: FqColors.primary,
-          borderRadius: FqRadii.sheetBorder,
-          boxShadow: FqShadows.heroBrand(),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF302B63), Color(0xFF51489A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'YOUR FITNESS JOURNEY',
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        loading ? 'LOADING...' : profileName.toUpperCase(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.6,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        'Level $level • Fitness Explorer',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                _levelBadge(level),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: _buildAnimatedAvatar(
-                    level: level,
-                    size: 150,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _avatarMiniStat(
-                        Icons.local_fire_department_rounded,
-                        '$streak',
-                        'DAY STREAK',
-                      ),
-                      const SizedBox(height: 9),
-                      _avatarMiniStat(
-                        Icons.bolt_rounded,
-                        '$xp XP',
-                        'TOTAL XP',
-                      ),
-                      const SizedBox(height: 9),
-                      _avatarMiniStat(
-                        Icons.emoji_events_rounded,
-                        '$badges',
-                        'BADGES',
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '$xp / $nextLevel XP',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                Text(
-                  progress >= 1
-                      ? 'LEVEL UP!'
-                      : '${(nextLevel - xp).clamp(0, nextLevel)} XP TO GO',
-                  style: const TextStyle(
-                    color: FqColors.accent,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 7),
-            ClipRRect(
-              borderRadius: FqRadii.cardBorder,
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.0, end: progress),
-                duration: const Duration(milliseconds: 800),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, child) {
-                  return LinearProgressIndicator(
-                    value: value,
-                    minHeight: 9,
-                    backgroundColor: Colors.white.withValues(alpha: 0.12),
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                      FqColors.accent,
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: () {
-                  setState(() {
-                    showAvatarEditor = !showAvatarEditor;
-                  });
-                },
-                icon: Icon(
-                  showAvatarEditor
-                      ? Icons.keyboard_arrow_up_rounded
-                      : Icons.auto_awesome_rounded,
-                ),
-                label: Text(
-                  showAvatarEditor ? 'CLOSE AVATAR' : 'CUSTOMIZE AVATAR',
-                ),
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: FqColors.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ),
-            AnimatedCrossFade(
-              firstChild: const SizedBox.shrink(),
-              secondChild: Padding(
-                padding: const EdgeInsets.only(top: 14),
-                child: _buildAvatarEditor(level),
-              ),
-              crossFadeState: showAvatarEditor
-                  ? CrossFadeState.showSecond
-                  : CrossFadeState.showFirst,
-              duration: const Duration(milliseconds: 300),
-              firstCurve: Curves.easeOut,
-              secondCurve: Curves.easeOutCubic,
-            ),
-            const SizedBox(height: FqSpacing.label),
-            GestureDetector(
-              onTap: _showAvatarCollection,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 13,
-                  vertical: 11,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Row(
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF302B63).withValues(alpha: 0.25),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Top Identity Row
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.inventory_2_rounded,
-                      color: FqColors.accent,
-                      size: 18,
-                    ),
-                    SizedBox(width: 9),
-                    Expanded(
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       child: Text(
-                        'MY AVATAR COLLECTION',
-                        style: TextStyle(
+                        '🛡️ $house House',
+                        style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
+                          fontSize: 9.5,
                           fontWeight: FontWeight.w900,
-                          letterSpacing: 0.7,
                         ),
                       ),
                     ),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: Colors.white54,
-                      size: 20,
+                    const SizedBox(height: 8),
+                    Text(
+                      loading ? 'Loading...' : profileName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Riverside Academy • Student',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
               ),
+              _levelBadge(level),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Avatar Character & Quick stats
+          Row(
+            children: [
+              Expanded(
+                flex: 5,
+                child: _buildAnimatedAvatar(
+                  level: level,
+                  size: 130,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                flex: 6,
+                child: Column(
+                  children: [
+                    _heroStatMini(
+                      Icons.local_fire_department_rounded,
+                      '$streak Days',
+                      'Active Streak',
+                      FqColors.energy,
+                    ),
+                    const SizedBox(height: 8),
+                    _heroStatMini(
+                      Icons.bolt_rounded,
+                      '$xp XP',
+                      'Total Energy',
+                      FqColors.accent,
+                    ),
+                    const SizedBox(height: 8),
+                    _heroStatMini(
+                      Icons.emoji_events_rounded,
+                      '$badges Unlocked',
+                      'Badges',
+                      const Color(0xFFFBBF24),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // XP Progress Bar
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Level $level Progress',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              Text(
+                progress >= 1
+                    ? 'LEVEL COMPLETE!'
+                    : '${(nextLevel - xp).clamp(0, nextLevel)} XP to Level ${level + 1}',
+                style: const TextStyle(
+                  color: FqColors.accent,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: progress),
+              duration: const Duration(milliseconds: 700),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, child) {
+                return LinearProgressIndicator(
+                  value: value,
+                  minHeight: 8,
+                  backgroundColor: Colors.white.withValues(alpha: 0.15),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    FqColors.accent,
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 14),
+
+          // Customize Avatar Toggle Button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                setState(() {
+                  showAvatarEditor = !showAvatarEditor;
+                });
+              },
+              icon: Icon(
+                showAvatarEditor
+                    ? Icons.keyboard_arrow_up_rounded
+                    : Icons.auto_awesome_rounded,
+                size: 16,
+              ),
+              label: Text(
+                showAvatarEditor ? 'Hide Avatar Studio' : 'Customize Avatar Studio',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 11.5,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: FqColors.primary,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+          ),
+
+          // Inline Avatar Editor
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Padding(
+              padding: const EdgeInsets.only(top: 14),
+              child: _buildAvatarEditor(level),
+            ),
+            crossFadeState: showAvatarEditor
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 250),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _heroStatMini(
+    IconData icon,
+    String value,
+    String label,
+    Color iconColor,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: iconColor),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 8.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _levelBadge(int level) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.8, end: 1.0),
-      duration: const Duration(milliseconds: 700),
-      curve: Curves.elasticOut,
-      builder: (context, value, child) {
-        return Transform.scale(
-          scale: value,
-          child: child,
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 11,
-          vertical: 8,
-        ),
-        decoration: BoxDecoration(
-          color: FqColors.accent,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: FqColors.accent.withValues(alpha: 0.25),
-              blurRadius: 12,
-            ),
-          ],
-        ),
-        child: Text(
-          'LV $level',
-          style: const TextStyle(
-            color: FqColors.primary,
-            fontWeight: FontWeight.w900,
-            fontSize: 12,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: FqColors.accent,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: FqColors.accent.withValues(alpha: 0.35),
+            blurRadius: 10,
           ),
+        ],
+      ),
+      child: Text(
+        'LV $level',
+        style: const TextStyle(
+          color: FqColors.primary,
+          fontWeight: FontWeight.w900,
+          fontSize: 12,
         ),
       ),
     );
   }
 
-  Widget _avatarMiniStat(
-    IconData icon,
-    String value,
-    String label,
-  ) {
+  // ---------------------------------------------------------------------------
+  // MAIN STATS GRID
+  // ---------------------------------------------------------------------------
+
+  Widget _buildStats() {
     return Row(
       children: [
-        Container(
-          width: 31,
-          height: 31,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(
-            icon,
-            size: 17,
-            color: FqColors.accent,
+        Expanded(
+          child: _statCard(
+            Icons.bolt_rounded,
+            '$xp',
+            'Total XP',
+            FqColors.energy,
           ),
         ),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white54,
-                fontSize: 8,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
+        const SizedBox(width: 10),
+        Expanded(
+          child: _statCard(
+            Icons.local_fire_department_rounded,
+            '$streak Days',
+            'Streak',
+            const Color(0xFFF97316),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _statCard(
+            Icons.military_tech_rounded,
+            '$badges',
+            'Badges',
+            const Color(0xFFEAB308),
+          ),
         ),
       ],
     );
   }
+
+  Widget _statCard(
+    IconData icon,
+    String value,
+    String label,
+    Color iconColor,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE7E8EE)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+              color: FqColors.ink,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 9.5,
+              color: Color(0xFF747887),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // HEALTH & VITALS SNAPSHOT
+  // ---------------------------------------------------------------------------
+
+  Widget _buildHealthSnapshotCard() {
+    final currentBmi = bmi;
+    String bmiLabel = 'Not Set';
+    Color bmiColor = const Color(0xFF747887);
+
+    if (currentBmi != null) {
+      if (currentBmi < 18.5) {
+        bmiLabel = 'Underweight';
+        bmiColor = const Color(0xFF3B82F6);
+      } else if (currentBmi <= 24.9) {
+        bmiLabel = 'Healthy Weight';
+        bmiColor = const Color(0xFF10B981);
+      } else if (currentBmi <= 29.9) {
+        bmiLabel = 'Moderate';
+        bmiColor = const Color(0xFFF59E0B);
+      } else {
+        bmiLabel = 'High';
+        bmiColor = const Color(0xFFEF4444);
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE7E8EE)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEEF2FF),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.monitor_heart_rounded,
+                      color: FqColors.primary,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'HEALTH & VITALS',
+                    style: TextStyle(
+                      color: FqColors.ink,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ],
+              ),
+              InkWell(
+                onTap: _showHealthProfileSheet,
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: FqColors.lavender,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.edit_rounded,
+                        size: 12,
+                        color: FqColors.primary,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'Edit',
+                        style: TextStyle(
+                          color: FqColors.primary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _vitalMetric(
+                  'HEIGHT',
+                  heightCm != null ? '${_formatNumber(heightCm!)} cm' : '--',
+                ),
+              ),
+              Container(width: 1, height: 28, color: const Color(0xFFE7E8EE)),
+              Expanded(
+                child: _vitalMetric(
+                  'WEIGHT',
+                  weightKg != null ? '${_formatNumber(weightKg!)} kg' : '--',
+                ),
+              ),
+              Container(width: 1, height: 28, color: const Color(0xFFE7E8EE)),
+              Expanded(
+                child: _vitalMetric(
+                  'BLOOD',
+                  bloodGroup.isNotEmpty ? bloodGroup : '--',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: FqColors.scaffold,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Text(
+                  'BMI Index: ',
+                  style: TextStyle(
+                    color: Color(0xFF747887),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  currentBmi != null
+                      ? currentBmi.toStringAsFixed(1)
+                      : 'Not Calculated',
+                  style: const TextStyle(
+                    color: FqColors.ink,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const Spacer(),
+                if (currentBmi != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: bmiColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      bmiLabel,
+                      style: TextStyle(
+                        color: bmiColor,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _vitalMetric(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: FqColors.ink,
+            fontSize: 13.5,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF747887),
+            fontSize: 8.5,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // SECTION & MENU ITEM BUILDERS
+  // ---------------------------------------------------------------------------
+
+  Widget _buildSection({
+    required String title,
+    required List<Widget> children,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: FqTypography.sectionLabel(color: FqColors.muted),
+        ),
+        const SizedBox(height: 8),
+        Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          clipBehavior: Clip.antiAlias,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFE7E8EE)),
+            ),
+            child: Column(children: children),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMenuItem({
+    required IconData iconData,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 2,
+      ),
+      leading: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: iconColor.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(11),
+        ),
+        child: Center(
+          child: Icon(
+            iconData,
+            color: iconColor,
+            size: 19,
+          ),
+        ),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontWeight: FontWeight.w800,
+          color: FqColors.ink,
+          fontSize: 13,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(
+          fontSize: 10.5,
+          color: Color(0xFF747887),
+        ),
+      ),
+      trailing: const Icon(
+        Icons.chevron_right_rounded,
+        color: Color(0xFFCBD5E1),
+        size: 20,
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // AVATAR ANIMATION & CUSTOMIZATION
+  // ---------------------------------------------------------------------------
 
   Widget _buildAnimatedAvatar({
     required int level,
@@ -1055,12 +1179,12 @@ _buildMenuItem(
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: frameColor,
-                    width: selectedFrame == 'gold' ? 8 : 6,
+                    width: selectedFrame == 'gold' ? 6 : 4,
                   ),
                   boxShadow: [
                     BoxShadow(
                       color: frameColor.withValues(alpha: 0.28),
-                      blurRadius: 18,
+                      blurRadius: 14,
                     ),
                   ],
                 ),
@@ -1069,7 +1193,7 @@ _buildMenuItem(
               bottom: 4,
               child: Container(
                 width: size * 0.58,
-                height: 12,
+                height: 10,
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.20),
                   borderRadius: BorderRadius.circular(50),
@@ -1083,49 +1207,6 @@ _buildMenuItem(
                 level: level,
               ),
             ),
-            if (_avatarCelebrating)
-              Positioned(
-                top: 2,
-                right: 4,
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.3, end: 1.0),
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.elasticOut,
-                  builder: (context, value, child) {
-                    return Transform.scale(
-                      scale: value,
-                      child: child,
-                    );
-                  },
-                  child: const Icon(
-                    Icons.auto_awesome_rounded,
-                    color: FqColors.accent,
-                    size: 24,
-                  ),
-                ),
-              ),
-            if (selectedBanner == 'fitness')
-              Positioned(
-                bottom: 0,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Text(
-                    'FITNESS EXPLORER',
-                    style: TextStyle(
-                      color: FqColors.primary,
-                      fontSize: 7,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-              ),
           ],
         ),
       ),
@@ -1156,12 +1237,12 @@ _buildMenuItem(
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 220),
                     margin: const EdgeInsets.symmetric(horizontal: 3),
-                    padding: const EdgeInsets.symmetric(vertical: 9),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
                       color: avatarTab == index
                           ? Colors.white
                           : Colors.white.withValues(alpha: 0.07),
-                      borderRadius: BorderRadius.circular(11),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       tabs[index],
@@ -1245,9 +1326,9 @@ _buildMenuItem(
 
   Widget _buildBannerOptions(int level) {
     final banners = [
-      ('fitness', 'Fitness Explorer', 1, Icons.local_fire_department_rounded),
+      ('fitness', 'Explorer', 1, Icons.local_fire_department_rounded),
       ('streak', 'Streak', 3, Icons.bolt_rounded),
-      ('quest', 'Quest Master', 5, Icons.emoji_events_rounded),
+      ('quest', 'Master', 5, Icons.emoji_events_rounded),
     ];
 
     return _optionGrid(
@@ -1295,108 +1376,57 @@ _buildMenuItem(
         return GestureDetector(
           onTap: () => onSelect(id, unlockLevel),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
-            padding: const EdgeInsets.all(7),
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: isSelected
-                  ? FqColors.lavender
-                  : Colors.white.withValues(alpha: 0.06),
-              borderRadius: FqRadii.chipBorder,
+                  ? Colors.white
+                  : Colors.white.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isSelected
                     ? FqColors.accent
-                    : Colors.white.withValues(alpha: 0.08),
-                width: isSelected ? 1.5 : 1,
+                    : Colors.white.withValues(alpha: 0.2),
+                width: isSelected ? 2 : 1,
               ),
             ),
-            child: Stack(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        icon,
-                        color: locked
-                            ? Colors.white30
-                            : isSelected
-                                ? FqColors.primary
-                                : Colors.white70,
-                        size: 23,
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: locked ? Colors.white30 : Colors.white,
-                          fontSize: 8,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        locked ? 'LV $unlockLevel' : 'UNLOCKED',
-                        style: TextStyle(
-                          color: locked
-                              ? FqColors.accent
-                              : FqColors.successSurface,
-                          fontSize: 7,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
+                Icon(
+                  icon,
+                  size: 20,
+                  color: isSelected
+                      ? FqColors.primary
+                      : locked
+                          ? Colors.white38
+                          : Colors.white,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isSelected ? FqColors.primary : Colors.white,
+                    fontSize: 8,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                if (locked)
-                  const Positioned(
-                    right: 2,
-                    top: 2,
-                    child: Icon(
-                      Icons.lock_rounded,
-                      color: Colors.white54,
-                      size: 12,
-                    ),
+                Text(
+                  locked ? 'LV $unlockLevel' : 'READY',
+                  style: TextStyle(
+                    color: locked ? Colors.white38 : FqColors.accent,
+                    fontSize: 6.5,
+                    fontWeight: FontWeight.w900,
                   ),
+                ),
               ],
             ),
           ),
         );
       },
     );
-  }
-
-  Future<void> _saveAvatarSelection({
-    String? outfit,
-    String? frame,
-    String? banner,
-  }) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    try {
-      final updates = <String, dynamic>{};
-
-      if (outfit != null) {
-        updates['avatarOutfit'] = outfit;
-      }
-      if (frame != null) {
-        updates['avatarFrame'] = frame;
-      }
-      if (banner != null) {
-        updates['avatarBanner'] = banner;
-      }
-
-      if (updates.isNotEmpty) {
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set(
-              updates,
-              SetOptions(merge: true),
-            );
-      }
-    } catch (_) {
-      // Keep the UI responsive even if saving is temporarily unavailable.
-    }
   }
 
   void _playAvatarReaction() {
@@ -1416,186 +1446,231 @@ _buildMenuItem(
     });
   }
 
-  void _showAvatarCollection() {
-    final level = (xp ~/ 250) + 1;
+  Future<void> _saveAvatarSelection({
+    String? outfit,
+    String? frame,
+    String? banner,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
 
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return Container(
-          padding: const EdgeInsets.fromLTRB(18, 14, 18, 24),
-          decoration: BoxDecoration(
-            color: FqColors.scaffold,
-            borderRadius: FqRadii.sheetTopBorder,
+    final updates = <String, dynamic>{};
+    if (outfit != null) updates['avatarOutfit'] = outfit;
+    if (frame != null) updates['avatarFrame'] = frame;
+    if (banner != null) updates['avatarBanner'] = banner;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set(updates, SetOptions(merge: true));
+    } catch (_) {}
+  }
+
+  void _showLocked(int unlockLevel) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text(
+            'Reach Level $unlockLevel to unlock this item.',
           ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 42,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.black12,
-                    borderRadius: FqRadii.cardBorder,
+          duration: const Duration(milliseconds: 1600),
+        ),
+      );
+  }
+
+  // ---------------------------------------------------------------------------
+  // LEVEL UP OVERLAY
+  // ---------------------------------------------------------------------------
+
+  Widget _buildLevelUpOverlay() {
+    final level = _lastKnownLevel ?? 1;
+
+    return Positioned.fill(
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.70),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.55, end: 1.0),
+              duration: const Duration(milliseconds: 650),
+              curve: Curves.elasticOut,
+              builder: (context, scale, child) {
+                return Transform.scale(
+                  scale: scale,
+                  child: child,
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 27),
+                padding: const EdgeInsets.fromLTRB(22, 20, 22, 20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: FqColors.accent,
+                    width: 2,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: FqColors.accent.withValues(alpha: 0.30),
+                      blurRadius: 40,
+                      spreadRadius: 5,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 14),
-                const Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      'MY COLLECTION',
-                      style: TextStyle(
-                        color: FqColors.ink,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
+                    Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: FqColors.lavender,
+                        border: Border.all(
+                          color: FqColors.accent,
+                          width: 4,
+                        ),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          '🏆',
+                          style: TextStyle(fontSize: 44),
+                        ),
                       ),
                     ),
-                    Spacer(),
-                    Icon(
-                      Icons.auto_awesome_rounded,
-                      color: FqColors.accent,
+                    const SizedBox(height: 10),
+                    const Text(
+                      'LEVEL UP!',
+                      style: TextStyle(
+                        color: FqColors.primary,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'LEVEL $level REACHED',
+                      style: const TextStyle(
+                        color: FqColors.energy,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 11,
+                      ),
+                      decoration: BoxDecoration(
+                        color: FqColors.lavender,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'NEW REWARD UNLOCKED',
+                            style: TextStyle(
+                              color: Colors.black45,
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _levelUpReward,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: FqColors.ink,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              setState(() {
+                                _showLevelUp = false;
+                                _avatarCelebrating = false;
+                              });
+                            },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: FqColors.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text('LATER'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              await _equipLevelReward();
+                              if (!mounted) return;
+                              setState(() {
+                                _showLevelUp = false;
+                                _avatarCelebrating = false;
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: FqColors.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text('EQUIP NOW'),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
-                _collectionSection(
-                  title: 'OUTFITS',
-                  items: [
-                    ('FitQuest', 'default', 1, Icons.sports),
-                    ('Runner', 'running', 2, Icons.directions_run_rounded),
-                    ('Cricket', 'cricket', 3, Icons.sports_cricket_rounded),
-                    ('Football', 'football', 4, Icons.sports_soccer_rounded),
-                  ],
-                  selected: selectedOutfit,
-                  level: level,
-                ),
-                const SizedBox(height: 12),
-                _collectionSection(
-                  title: 'FRAMES',
-                  items: [
-                    ('None', 'none', 1, Icons.circle_outlined),
-                    ('Bronze', 'bronze', 2, Icons.circle),
-                    ('Silver', 'silver', 3, Icons.circle),
-                    ('Gold', 'gold', 5, Icons.auto_awesome_rounded),
-                  ],
-                  selected: selectedFrame,
-                  level: level,
-                ),
-                const SizedBox(height: 12),
-                _collectionSection(
-                  title: 'BANNERS',
-                  items: [
-                    (
-                      'Fitness',
-                      'fitness',
-                      1,
-                      Icons.local_fire_department_rounded
-                    ),
-                    ('Streak', 'streak', 3, Icons.bolt_rounded),
-                    ('Quest Master', 'quest', 5, Icons.emoji_events_rounded),
-                  ],
-                  selected: selectedBanner,
-                  level: level,
-                ),
-              ],
+              ),
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _collectionSection({
-    required String title,
-    required List<(String, String, int, IconData)> items,
-    required String selected,
-    required int level,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            color: Colors.black45,
-            fontSize: 9,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.1,
-          ),
-        ),
-        const SizedBox(height: 7),
-        SizedBox(
-          height: 78,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: items.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final item = items[index];
-              final unlocked = level >= item.$3;
-              final equipped = selected == item.$2;
+  void _showLevelUpCelebration(int level) {
+    final reward = switch (level) {
+      2 => 'Runner Outfit Unlocked',
+      3 => 'Cricket Outfit Unlocked',
+      4 => 'Football Outfit Unlocked',
+      5 => 'Gold Frame Unlocked',
+      7 => 'Fitness Buddy Banner Unlocked',
+      10 => 'Champion Reward Unlocked',
+      _ => 'New Fitness Reward Unlocked',
+    };
 
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                width: 88,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: equipped ? FqColors.lavender : Colors.white,
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(
-                    color: equipped
-                        ? FqColors.accent
-                        : Colors.black.withValues(alpha: 0.05),
-                    width: equipped ? 1.5 : 1,
-                  ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      item.$4,
-                      size: 22,
-                      color: unlocked ? FqColors.primary : Colors.black26,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item.$1,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: unlocked ? FqColors.ink : Colors.black38,
-                        fontSize: 8,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    Text(
-                      equipped
-                          ? 'EQUIPPED'
-                          : unlocked
-                              ? 'UNLOCKED'
-                              : 'LV ${item.$3}',
-                      style: TextStyle(
-                        color: equipped
-                            ? FqColors.success
-                            : unlocked
-                                ? FqColors.primary
-                                : Colors.black26,
-                        fontSize: 7,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
+    setState(() {
+      _levelUpReward = reward;
+      _showLevelUp = true;
+      _avatarCelebrating = true;
+    });
+
+    _avatarAnimationController
+      ..reset()
+      ..forward();
   }
 
   Future<void> _equipLevelReward() async {
@@ -1629,23 +1704,9 @@ _buildMenuItem(
         break;
     }
 
-    if (outfit != null) {
-      setState(() {
-        selectedOutfit = outfit!;
-      });
-    }
-
-    if (frame != null) {
-      setState(() {
-        selectedFrame = frame!;
-      });
-    }
-
-    if (banner != null) {
-      setState(() {
-        selectedBanner = banner!;
-      });
-    }
+    if (outfit != null) setState(() => selectedOutfit = outfit!);
+    if (frame != null) setState(() => selectedFrame = frame!);
+    if (banner != null) setState(() => selectedBanner = banner!);
 
     await _saveAvatarSelection(
       outfit: outfit,
@@ -1654,199 +1715,9 @@ _buildMenuItem(
     );
   }
 
-  void _showLocked(int unlockLevel) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          content: Text(
-            'Reach Level $unlockLevel to unlock this item.',
-          ),
-          duration: const Duration(milliseconds: 1600),
-        ),
-      );
-  }
-
-  // ============================================================
-  // PROFILE AVATAR
-  // ============================================================
-
-  Widget _buildStats() {
-    return Row(
-      children: [
-        Expanded(
-          child: _statCard(
-            '⭐',
-            '$xp',
-            'XP',
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _statCard(
-            '🔥',
-            '$streak',
-            'Day Streak',
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _statCard(
-            '🏆',
-            '$badges',
-            'Badges',
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _statCard(
-    String emoji,
-    String value,
-    String label,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 15,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        children: [
-          Text(
-            emoji,
-            style: const TextStyle(fontSize: 22),
-          ),
-          const SizedBox(height: 7),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w900,
-              color: FqColors.ink,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 10,
-              color: Colors.black45,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSection({
-    required String title,
-    required List<Widget> children,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1,
-            color: Colors.black45,
-          ),
-        ),
-        const SizedBox(height: 9),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Column(
-            children: children,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMenuItem({
-    String? icon,
-    IconData? iconData,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 4,
-      ),
-      leading: Container(
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          color: FqColors.lavender,
-          borderRadius: BorderRadius.circular(13),
-        ),
-        child: Center(
-          child: iconData != null
-              ? Icon(
-                  iconData,
-                  color: FqColors.primary,
-                  size: 22,
-                )
-              : Text(
-                  icon ?? '',
-                  style: const TextStyle(fontSize: 21),
-                ),
-        ),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontWeight: FontWeight.w800,
-          color: FqColors.ink,
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: const TextStyle(
-          fontSize: 12,
-          color: Colors.black45,
-        ),
-      ),
-      trailing: const Icon(
-        Icons.chevron_right_rounded,
-        color: Colors.black26,
-      ),
-    );
-  }
-
-  String _healthProfileSubtitle() {
-    final parts = <String>[];
-
-    if (heightCm != null) {
-      parts.add('${_formatNumber(heightCm!)} cm');
-    }
-    if (weightKg != null) {
-      parts.add('${_formatNumber(weightKg!)} kg');
-    }
-    if (bmi != null) {
-      parts.add('BMI ${bmi!.toStringAsFixed(1)}');
-    }
-
-    return parts.isEmpty
-        ? 'Add your personal health information'
-        : parts.join(' • ');
-  }
+  // ---------------------------------------------------------------------------
+  // HEALTH PROFILE SHEET (BMI Calculation)
+  // ---------------------------------------------------------------------------
 
   double? get bmi {
     final height = heightCm;
@@ -1914,7 +1785,7 @@ _buildMenuItem(
         ..hideCurrentSnackBar()
         ..showSnackBar(
           const SnackBar(
-            content: Text('Could not save your health profile. Try again.'),
+            content: Text('Could not save your health profile.'),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -2040,7 +1911,7 @@ _buildMenuItem(
                             height: 4,
                             decoration: BoxDecoration(
                               color: Colors.black12,
-                              borderRadius: FqRadii.cardBorder,
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
                         ),
@@ -2052,7 +1923,7 @@ _buildMenuItem(
                               height: 44,
                               decoration: BoxDecoration(
                                 color: FqColors.lavender,
-                                borderRadius: FqRadii.chipBorder,
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(
                                 Icons.monitor_heart_rounded,
@@ -2074,10 +1945,10 @@ _buildMenuItem(
                                   ),
                                   SizedBox(height: 2),
                                   Text(
-                                    'Private personal health information',
+                                    'Private student health vitals',
                                     style: TextStyle(
                                       color: FqColors.muted,
-                                      fontSize: 12,
+                                      fontSize: 11,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -2086,7 +1957,7 @@ _buildMenuItem(
                             ),
                           ],
                         ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 16),
                         Row(
                           children: [
                             Expanded(
@@ -2128,7 +1999,7 @@ _buildMenuItem(
                             letterSpacing: 1,
                           ),
                         ),
-                        const SizedBox(height: 7),
+                        const SizedBox(height: 6),
                         Wrap(
                           spacing: 7,
                           runSpacing: 7,
@@ -2159,11 +2030,7 @@ _buildMenuItem(
                                     ? FqColors.primary
                                     : FqColors.ink,
                                 fontWeight: FontWeight.w800,
-                              ),
-                              side: BorderSide(
-                                color: selected
-                                    ? FqColors.primary
-                                    : Colors.black12,
+                                fontSize: 11,
                               ),
                             );
                           }).toList(),
@@ -2178,21 +2045,21 @@ _buildMenuItem(
                             letterSpacing: 1,
                           ),
                         ),
-                        const SizedBox(height: 7),
+                        const SizedBox(height: 6),
                         InkWell(
-                          borderRadius: FqRadii.inputBorder,
+                          borderRadius: BorderRadius.circular(14),
                           onTap: pickDate,
                           child: Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 14,
-                              vertical: 15,
+                              vertical: 13,
                             ),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: FqRadii.inputBorder,
+                              borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: Colors.black.withValues(alpha: 0.06),
+                                color: const Color(0xFFE7E8EE),
                               ),
                             ),
                             child: Row(
@@ -2200,13 +2067,13 @@ _buildMenuItem(
                                 const Icon(
                                   Icons.calendar_month_rounded,
                                   color: FqColors.primary,
-                                  size: 20,
+                                  size: 18,
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
                                     selectedDate == null
-                                        ? 'Select date'
+                                        ? 'Select birth date'
                                         : '${selectedDate!.day.toString().padLeft(2, '0')}/'
                                             '${selectedDate!.month.toString().padLeft(2, '0')}/'
                                             '${selectedDate!.year}',
@@ -2215,12 +2082,9 @@ _buildMenuItem(
                                           ? FqColors.muted
                                           : FqColors.ink,
                                       fontWeight: FontWeight.w700,
+                                      fontSize: 12,
                                     ),
                                   ),
-                                ),
-                                const Icon(
-                                  Icons.chevron_right_rounded,
-                                  color: Colors.black26,
                                 ),
                               ],
                             ),
@@ -2229,10 +2093,10 @@ _buildMenuItem(
                         const SizedBox(height: 14),
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(15),
+                          padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
                             color: FqColors.lavender,
-                            borderRadius: FqRadii.cardBorder,
+                            borderRadius: BorderRadius.circular(16),
                           ),
                           child: Row(
                             children: [
@@ -2248,22 +2112,22 @@ _buildMenuItem(
                                       CrossAxisAlignment.start,
                                   children: [
                                     const Text(
-                                      'BMI',
+                                      'CALCULATED BMI',
                                       style: TextStyle(
                                         color: FqColors.muted,
-                                        fontSize: 10,
+                                        fontSize: 9,
                                         fontWeight: FontWeight.w900,
                                         letterSpacing: 1,
                                       ),
                                     ),
-                                    const SizedBox(height: 3),
+                                    const SizedBox(height: 2),
                                     Text(
                                       previewBmi == null
-                                          ? 'Add height and weight'
+                                          ? 'Enter height & weight'
                                           : previewBmi.toStringAsFixed(1),
                                       style: const TextStyle(
                                         color: FqColors.ink,
-                                        fontSize: 21,
+                                        fontSize: 18,
                                         fontWeight: FontWeight.w900,
                                       ),
                                     ),
@@ -2271,18 +2135,6 @@ _buildMenuItem(
                                 ),
                               ),
                             ],
-                          ),
-                        ),
-                        const SizedBox(height: 9),
-                        const Text(
-                          'BMI is shown as an informational calculation. For students, '
-                          'BMI may need age- and sex-specific interpretation by a '
-                          'qualified health professional.',
-                          style: TextStyle(
-                            color: FqColors.muted,
-                            fontSize: 10,
-                            height: 1.35,
-                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         if (validationMessage != null) ...[
@@ -2299,22 +2151,23 @@ _buildMenuItem(
                         const SizedBox(height: 16),
                         SizedBox(
                           width: double.infinity,
-                          child: FilledButton(
+                          child: ElevatedButton(
                             onPressed: saving ? null : save,
-                            style: FilledButton.styleFrom(
+                            style: ElevatedButton.styleFrom(
                               backgroundColor: FqColors.primary,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(
-                                vertical: 14,
+                                vertical: 13,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: FqRadii.buttonBorder,
+                                borderRadius: BorderRadius.circular(14),
                               ),
                             ),
                             child: Text(
                               saving ? 'SAVING...' : 'SAVE HEALTH PROFILE',
                               style: const TextStyle(
                                 fontWeight: FontWeight.w900,
+                                fontSize: 12,
                                 letterSpacing: 0.7,
                               ),
                             ),
@@ -2350,19 +2203,34 @@ _buildMenuItem(
           label,
           style: const TextStyle(
             color: FqColors.muted,
-            fontSize: 10,
+            fontSize: 9.5,
             fontWeight: FontWeight.w900,
-            letterSpacing: 1,
+            letterSpacing: 0.8,
           ),
         ),
-        const SizedBox(height: 7),
+        const SizedBox(height: 6),
         TextField(
           controller: controller,
           onChanged: onChanged,
           keyboardType: keyboardType,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: FqColors.ink,
+          ),
           decoration: InputDecoration(
             hintText: hint,
             suffixText: suffix,
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 10,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE7E8EE)),
+            ),
           ),
         ),
       ],
@@ -2371,14 +2239,14 @@ _buildMenuItem(
 
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
-
     if (!mounted) return;
-
-    Navigator.of(context).popUntil(
-      (route) => route.isFirst,
-    );
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 }
+
+// -----------------------------------------------------------------------------
+// AVATAR CHARACTER COMPONENT
+// -----------------------------------------------------------------------------
 
 class _AvatarCharacter extends StatelessWidget {
   final String outfit;
@@ -2469,10 +2337,10 @@ class _AvatarCharacter extends StatelessWidget {
                     child: Container(
                       width: 14,
                       height: 5,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
-                            color: const Color(0xFFD66A5C),
+                            color: Color(0xFFD66A5C),
                             width: 2,
                           ),
                         ),
@@ -2586,7 +2454,7 @@ class _AvatarCharacter extends StatelessWidget {
             ),
           ),
           if (level >= 5)
-            Positioned(
+            const Positioned(
               top: 0,
               right: 7,
               child: Icon(

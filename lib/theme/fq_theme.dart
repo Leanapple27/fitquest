@@ -66,6 +66,12 @@ abstract final class FqTheme {
       fontFamily: FqTypography.fontFamily,
       scaffoldBackgroundColor: scaffold,
       colorScheme: colorScheme,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: ZoomPageTransitionsBuilder(),
+          TargetPlatform.iOS: FadeUpwardsPageTransitionsBuilder(),
+        },
+      ),
       textTheme: FqTypography.textTheme(ink: ink, muted: muted),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
