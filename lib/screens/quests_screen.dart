@@ -268,6 +268,27 @@ class _QuestsScreenState extends State<QuestsScreen> {
     ).then((_) => _loadQuests());
   }
 
+  bool _supportsAiVision({required String questId, required String category}) {
+    final cat = category.toUpperCase();
+    final id = questId.toLowerCase();
+    if (id.contains('hydration') ||
+        id.contains('water') ||
+        id.contains('step') ||
+        id.contains('campus') ||
+        id.contains('hotspot')) {
+      return false;
+    }
+    return cat == 'CARDIO' ||
+        cat == 'WORKOUT' ||
+        cat == 'FLEXIBILITY' ||
+        cat == 'FITNESS' ||
+        id.contains('workout') ||
+        id.contains('warrior') ||
+        id.contains('squat') ||
+        id.contains('pushup') ||
+        id.contains('stretch');
+  }
+
   @override
   Widget build(BuildContext context) {
     final completed = _dailyQuests.where((q) => _isCompleted(q['id'] as String)).length;
@@ -827,49 +848,82 @@ class _QuestsScreenState extends State<QuestsScreen> {
 
           // Action Button & AI Camera Button
           if (!completed) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (!started) {
-                        _startQuest(questId);
-                      } else if (current < 1) {
-                        _continueQuest(questId);
-                      } else {
-                        _completeQuest(questId, xp);
-                      }
-                    },
+            if (_supportsAiVision(questId: questId, category: category))
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (!started) {
+                          _startQuest(questId);
+                        } else if (current < 1) {
+                          _continueQuest(questId);
+                        } else {
+                          _completeQuest(questId, xp);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: current >= 1.0
+                            ? FqColors.energy
+                            : FqColors.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            current >= 1.0
+                                ? Icons.card_giftcard_rounded
+                                : started
+                                    ? Icons.play_arrow_rounded
+                                    : Icons.flag_rounded,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            !started
+                                ? 'START'
+                                : current < 1
+                                    ? 'PROGRESS'
+                                    : 'CLAIM +$xp XP',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => _openAiVisionWorkout(
+                      questId: questId,
+                      title: title,
+                      xp: xp,
+                    ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: current >= 1.0
-                          ? FqColors.energy
-                          : FqColors.primary,
-                      foregroundColor: Colors.white,
+                      backgroundColor: const Color(0xFF1E1B4B),
+                      foregroundColor: const Color(0xFF00F5D4),
                       elevation: 0,
+                      side: const BorderSide(color: Color(0xFF00F5D4), width: 1.2),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: const Row(
                       children: [
-                        Icon(
-                          current >= 1.0
-                              ? Icons.card_giftcard_rounded
-                              : started
-                                  ? Icons.play_arrow_rounded
-                                  : Icons.flag_rounded,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 6),
+                        Icon(Icons.camera_alt_rounded, size: 15, color: Color(0xFF00F5D4)),
+                        SizedBox(width: 5),
                         Text(
-                          !started
-                              ? 'START'
-                              : current < 1
-                                  ? 'PROGRESS'
-                                  : 'CLAIM +$xp XP',
-                          style: const TextStyle(
-                            fontSize: 11,
+                          'AI VISION',
+                          style: TextStyle(
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 0.5,
                           ),
@@ -877,40 +931,62 @@ class _QuestsScreenState extends State<QuestsScreen> {
                       ],
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () => _openAiVisionWorkout(
-                    questId: questId,
-                    title: title,
-                    xp: xp,
-                  ),
+                ],
+              )
+            else
+              SizedBox(
+                width: double.infinity,
+                height: 42,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (!started) {
+                      _startQuest(questId);
+                    } else if (current < 1) {
+                      _continueQuest(questId);
+                    } else {
+                      _completeQuest(questId, xp);
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1E1B4B),
-                    foregroundColor: const Color(0xFF00F5D4),
+                    backgroundColor: current >= 1.0
+                        ? FqColors.energy
+                        : FqColors.primary,
+                    foregroundColor: Colors.white,
                     elevation: 0,
-                    side: const BorderSide(color: Color(0xFF00F5D4), width: 1.2),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Row(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.camera_alt_rounded, size: 15, color: Color(0xFF00F5D4)),
-                      SizedBox(width: 5),
+                      Icon(
+                        current >= 1.0
+                            ? Icons.card_giftcard_rounded
+                            : started
+                                ? Icons.play_arrow_rounded
+                                : Icons.flag_rounded,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 6),
                       Text(
-                        'AI VISION',
-                        style: TextStyle(
-                          fontSize: 10.5,
+                        !started
+                            ? 'START QUEST'
+                            : current < 1
+                                ? (questId == 'hydration_hero'
+                                    ? 'DRINK +1 GLASS 💧'
+                                    : 'CONTINUE QUEST')
+                                : 'CLAIM +$xp XP REWARD',
+                        style: const TextStyle(
+                          fontSize: 11.5,
                           fontWeight: FontWeight.w900,
-                          letterSpacing: 0.5,
+                          letterSpacing: 0.6,
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
           ] else
             Container(
               width: double.infinity,
