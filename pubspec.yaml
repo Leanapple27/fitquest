@@ -19,6 +19,7 @@ dependencies:
 
   shared_preferences: ^2.5.3
   home_widget: ^0.7.0
+  google_generative_ai: ^0.4.4
 
   
 

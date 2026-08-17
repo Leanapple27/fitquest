@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../app_state.dart';
 import '../theme/fq_colors.dart';
 import '../theme/fq_typography.dart';
+import 'ai_vision_workout_screen.dart';
 import 'workout_screen.dart';
 
 class QuestsScreen extends StatefulWidget {
@@ -246,6 +247,25 @@ class _QuestsScreenState extends State<QuestsScreen> {
         ),
       ),
     );
+  }
+
+  void _openAiVisionWorkout({
+    required String questId,
+    required String title,
+    required int xp,
+  }) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AiVisionWorkoutScreen(
+          appState: widget.appState,
+          questId: questId,
+          exerciseName: title.contains('Warrior') ? 'Squats' : 'Workout Reps',
+          targetReps: 12,
+          rewardXp: xp,
+        ),
+      ),
+    ).then((_) => _loadQuests());
   }
 
   @override
@@ -805,36 +825,12 @@ class _QuestsScreenState extends State<QuestsScreen> {
 
           const SizedBox(height: 14),
 
-          // Action Button
-          SizedBox(
-            width: double.infinity,
-            height: 42,
-            child: completed
-                ? Container(
-                    decoration: BoxDecoration(
-                      color: FqColors.successSurface,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.check_circle_rounded, color: FqColors.success, size: 16),
-                          SizedBox(width: 6),
-                          Text(
-                            'QUEST COMPLETED ✓',
-                            style: TextStyle(
-                              color: FqColors.success,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : ElevatedButton(
+          // Action Button & AI Camera Button
+          if (!completed) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
                     onPressed: () {
                       if (!started) {
                         _startQuest(questId);
@@ -868,20 +864,80 @@ class _QuestsScreenState extends State<QuestsScreen> {
                         const SizedBox(width: 6),
                         Text(
                           !started
-                              ? 'START QUEST'
+                              ? 'START'
                               : current < 1
-                                  ? 'CONTINUE QUEST'
-                                  : 'CLAIM +$xp XP REWARD',
+                                  ? 'PROGRESS'
+                                  : 'CLAIM +$xp XP',
                           style: const TextStyle(
-                            fontSize: 11.5,
+                            fontSize: 11,
                             fontWeight: FontWeight.w900,
-                            letterSpacing: 0.6,
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ],
                     ),
                   ),
-          ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () => _openAiVisionWorkout(
+                    questId: questId,
+                    title: title,
+                    xp: xp,
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1E1B4B),
+                    foregroundColor: const Color(0xFF00F5D4),
+                    elevation: 0,
+                    side: const BorderSide(color: Color(0xFF00F5D4), width: 1.2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.camera_alt_rounded, size: 15, color: Color(0xFF00F5D4)),
+                      SizedBox(width: 5),
+                      Text(
+                        'AI VISION',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ] else
+            Container(
+              width: double.infinity,
+              height: 42,
+              decoration: BoxDecoration(
+                color: FqColors.successSurface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle_rounded, color: FqColors.success, size: 16),
+                    SizedBox(width: 6),
+                    Text(
+                      'QUEST COMPLETED ✓',
+                      style: TextStyle(
+                        color: FqColors.success,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
     );
