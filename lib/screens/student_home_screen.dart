@@ -192,8 +192,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           _staggeredCard(1, _buildPlayerHeroCard()),
           const SizedBox(height: 16),
 
-          // 3. Today's Quest Spotlight
-          _staggeredCard(2, _buildQuestSpotlightCard()),
+          // 3. High Stakes 1v1 Duels & Weekly League Arena Banner
+          _staggeredCard(2, _buildHighStakesArenaBanner()),
           const SizedBox(height: 16),
 
           // 4. Streak & Activity Tracker Card
@@ -563,174 +563,187 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   }
 
   // ---------------------------------------------------------------------------
-  // TODAY'S QUEST SPOTLIGHT CARD
+  // HIGH STAKES 1v1 DUEL ARENA & WEEKLY LEAGUES BANNER
   // ---------------------------------------------------------------------------
 
-  Widget _buildQuestSpotlightCard() {
-    final bool completed = appState.morningWarriorCompleted;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: completed
-              ? FqColors.success.withValues(alpha: 0.3)
-              : const Color(0xFFE7E8EE),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: completed ? FqColors.successSurface : FqColors.lavender,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      completed
-                          ? Icons.check_circle_rounded
-                          : Icons.bolt_rounded,
-                      size: 13,
-                      color: completed ? FqColors.success : FqColors.primary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      completed ? 'QUEST COMPLETED' : 'TODAY\'S FEATURED QUEST',
-                      style: TextStyle(
-                        color: completed ? FqColors.success : FqColors.primary,
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                  ],
-                ),
+  Widget _buildHighStakesArenaBanner() {
+    return Column(
+      children: [
+        // 1v1 Duels Banner
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => DuelsScreen(appState: appState)),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF302B63), Color(0xFF0F0C29)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF7E6),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: FqColors.accent.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFF00F5D4).withValues(alpha: 0.6),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF302B63).withValues(alpha: 0.35),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Center(
+                    child: Text('⚔️', style: TextStyle(fontSize: 26)),
                   ),
                 ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.bolt_rounded, color: FqColors.energy, size: 14),
-                    Text(
-                      '+100 XP',
-                      style: TextStyle(
-                        color: FqColors.energy,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 10.5,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF00F5D4),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'HIGH STAKES ARENA',
+                              style: TextStyle(
+                                color: Color(0xFF0F0C29),
+                                fontSize: 8.5,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Text(
+                            'Wager XP',
+                            style: TextStyle(
+                              color: Color(0xFF00F5D4),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: completed ? FqColors.successSurface : FqColors.lavender,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Center(
-                  child: Text(
-                    completed ? '✅' : '🎯',
-                    style: const TextStyle(fontSize: 24),
+                      const SizedBox(height: 4),
+                      const Text(
+                        '1v1 Student Workout Duels',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15.5,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Challenge friends & verify reps via AI Camera',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.75),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Morning Warrior',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        color: FqColors.ink,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Complete 20 mins of physical activity today.',
-                      style: TextStyle(
-                        color: Color(0xFF747887),
-                        fontSize: 11.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            height: 42,
-            child: ElevatedButton(
-              onPressed: () => setState(() => selectedIndex = 1),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: completed ? FqColors.successSurface : FqColors.primary,
-                foregroundColor: completed ? FqColors.success : Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    completed ? Icons.check_circle_rounded : Icons.play_arrow_rounded,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    completed ? 'VIEW QUEST LOG' : 'START QUEST',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.6,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
+                const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF00F5D4), size: 16),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+
+        const SizedBox(height: 10),
+
+        // Weekly Leagues Banner
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => LeaguesScreen(appState: appState)),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.5), width: 1.2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const Text('🥇', style: TextStyle(fontSize: 22)),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'WEEKLY LEAGUE • GOLD DIVISION #4',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFFD97706),
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                      SizedBox(height: 1),
+                      Text(
+                        'Top 3 Promote to Diamond • 2d 14h left',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Text(
+                    'Rank #2 ⚡',
+                    style: TextStyle(
+                      color: Color(0xFFD97706),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
