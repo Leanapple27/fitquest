@@ -8,7 +8,9 @@ import '../theme/fq_colors.dart';
 import '../theme/fq_typography.dart';
 import 'ai_coach_screen.dart';
 import 'community_screen.dart';
+import 'duels_screen.dart';
 import 'fitmap_screen.dart';
+import 'leagues_screen.dart';
 import 'profile_screen.dart';
 import 'quests_screen.dart';
 import 'quiz_screen.dart';
@@ -1048,6 +1050,40 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => QuizScreen(appState: appState)),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _actionCard(
+                icon: Icons.sports_mma_rounded,
+                iconColor: const Color(0xFFEF4444),
+                title: '1v1 Duels',
+                subtitle: 'Wager XP & Battle',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => DuelsScreen(appState: appState)),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _actionCard(
+                icon: Icons.military_tech_rounded,
+                iconColor: const Color(0xFFF59E0B),
+                title: 'Weekly Leagues',
+                subtitle: 'Gold Division #4',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => LeaguesScreen(appState: appState)),
                   );
                 },
               ),
