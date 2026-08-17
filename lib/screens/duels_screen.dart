@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../app_state.dart';
+import '../theme/fq_animations.dart';
 import 'ai_vision_workout_screen.dart';
 
 class DuelsScreen extends StatefulWidget {
@@ -411,7 +412,16 @@ class _DuelsScreenState extends State<DuelsScreen> with SingleTickerProviderStat
 
         const SizedBox(height: 20),
 
-        ..._activeDuels.map((duel) => _buildDuelCard(duel)),
+        ..._activeDuels.asMap().entries.map((entry) {
+          final i = entry.key;
+          final duel = entry.value;
+          return FQFadeSlide(
+            index: i,
+            child: FQBounce(
+              child: _buildDuelCard(duel),
+            ),
+          );
+        }),
       ],
     );
   }
@@ -553,49 +563,56 @@ class _DuelsScreenState extends State<DuelsScreen> with SingleTickerProviderStat
   Widget _buildHistoryTab() {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
-      children: _duelHistory.map((item) {
+      children: _duelHistory.asMap().entries.map((entry) {
+        final i = entry.key;
+        final item = entry.value;
         final won = item['won'] as bool;
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        return FQFadeSlide(
+          index: i,
+          child: FQBounce(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    item['opponent'],
-                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Color(0xFF1E293B)),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item['opponent'],
+                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Color(0xFF1E293B)),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${item['exercise']} • ${item['date']}',
+                        style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${item['exercise']} • ${item['date']}',
-                    style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: won ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${item['result']} (${item['xpGained']})',
+                      style: TextStyle(
+                        color: won ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                        fontWeight: FontWeight.w900,
+                        fontSize: 10.5,
+                      ),
+                    ),
                   ),
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: won ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '${item['result']} (${item['xpGained']})',
-                  style: TextStyle(
-                    color: won ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
-                    fontWeight: FontWeight.w900,
-                    fontSize: 10.5,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         );
       }).toList(),

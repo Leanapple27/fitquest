@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../app_state.dart';
+import '../theme/fq_animations.dart';
 import '../theme/fq_colors.dart';
 import '../theme/fq_typography.dart';
 import 'ai_vision_workout_screen.dart';
@@ -400,16 +401,23 @@ class _QuestsScreenState extends State<QuestsScreen> {
                           ],
                         ),
                         const SizedBox(height: 10),
-                        ..._dailyQuests.map((q) {
+                        ..._dailyQuests.asMap().entries.map((entry) {
+                          final i = entry.key;
+                          final q = entry.value;
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
-                            child: _questCard(
-                              questId: q['id'] as String,
-                              emoji: q['icon'] as String,
-                              title: q['title'] as String,
-                              description: q['description'] as String,
-                              category: q['category'] as String? ?? 'FITNESS',
-                              xp: q['xp'] as int,
+                            child: FQFadeSlide(
+                              index: i,
+                              child: FQBounce(
+                                child: _questCard(
+                                  questId: q['id'] as String,
+                                  emoji: q['icon'] as String,
+                                  title: q['title'] as String,
+                                  description: q['description'] as String,
+                                  category: q['category'] as String? ?? 'FITNESS',
+                                  xp: q['xp'] as int,
+                                ),
+                              ),
                             ),
                           );
                         }),
@@ -567,8 +575,9 @@ class _QuestsScreenState extends State<QuestsScreen> {
                   children: [
                     const Icon(Icons.bolt_rounded, color: FqColors.energy, size: 16),
                     const SizedBox(width: 4),
-                    Text(
-                      '$xp XP',
+                    FQXpCounter(
+                      targetValue: xp,
+                      suffix: ' XP',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,

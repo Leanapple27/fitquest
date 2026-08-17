@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../app_state.dart';
 import '../notification_service.dart';
+import '../theme/fq_animations.dart';
 import '../theme/fq_colors.dart';
 import '../theme/fq_typography.dart';
 import 'ai_coach_screen.dart';
@@ -11,12 +12,14 @@ import 'community_screen.dart';
 import 'duels_screen.dart';
 import 'fitmap_screen.dart';
 import 'leagues_screen.dart';
+import 'posture_correction_screen.dart';
 import 'profile_screen.dart';
 import 'quests_screen.dart';
 import 'quiz_screen.dart';
 import 'rewards_screen.dart';
 import 'snap_screen.dart';
 import 'steps_screen.dart';
+import 'workout_screen.dart';
 
 class StudentHomeScreen extends StatefulWidget {
   const StudentHomeScreen({super.key});
@@ -497,8 +500,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                     Row(
                       children: [
                         const Icon(Icons.bolt_rounded, color: FqColors.accent, size: 18),
-                        Text(
-                          '$currentXp XP',
+                        FQXpCounter(
+                          targetValue: currentXp,
+                          suffix: ' XP',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -569,8 +573,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   Widget _buildHighStakesArenaBanner() {
     return Column(
       children: [
-        // 1v1 Duels Banner
-        GestureDetector(
+        // 1v1 Duels Banner with Fluid Touch Bounce & Breathing Pulse
+        FQBounce(
           onTap: () {
             Navigator.push(
               context,
@@ -673,8 +677,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
         const SizedBox(height: 10),
 
-        // Weekly Leagues Banner
-        GestureDetector(
+        // Weekly Leagues Banner with Fluid Touch Bounce
+        FQBounce(
           onTap: () {
             Navigator.push(
               context,
@@ -1103,6 +1107,40 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             ),
           ],
         ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _actionCard(
+                icon: Icons.auto_awesome_rounded,
+                iconColor: const Color(0xFF00F5D4),
+                title: 'AI Posture Lab',
+                subtitle: 'Check Form & Angle',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => PostureCorrectionScreen(appState: appState)),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _actionCard(
+                icon: Icons.fitness_center_rounded,
+                iconColor: const Color(0xFF3B82F6),
+                title: 'Workout Center',
+                subtitle: 'Guided Exercises',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => WorkoutScreen(appState: appState)),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -1114,49 +1152,63 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(18),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE7E8EE)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                child: Icon(icon, color: iconColor, size: 20),
+    return FQBounce(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFE7E8EE)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.025),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(height: 10),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: FqColors.ink,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                ),
+              child: Icon(icon, color: iconColor, size: 20),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: FqColors.ink,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      color: Color(0xFF747887),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  color: Color(0xFF747887),
-                  fontSize: 10,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

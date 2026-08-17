@@ -1,8 +1,8 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-
 import '../app_state.dart';
+import '../theme/fq_animations.dart';
+import 'posture_correction_screen.dart';
 
 class WorkoutScreen extends StatefulWidget {
   final AppState appState;
@@ -66,6 +66,8 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
         children: [
           _buildHeroCard(),
+          const SizedBox(height: 16),
+          _buildPostureLabBanner(),
           const SizedBox(height: 24),
           _buildSectionTitle('FITNESS PROGRAMS'),
           const SizedBox(height: 12),
@@ -91,6 +93,103 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPostureLabBanner() {
+    return FQBounce(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PostureCorrectionScreen(appState: widget.appState),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF0F0C29), Color(0xFF302B63)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: const Color(0xFF00F5D4).withValues(alpha: 0.6),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF302B63).withValues(alpha: 0.35),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Center(
+                child: Text('🔬', style: TextStyle(fontSize: 28)),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF00F5D4),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'NEW AI FEATURE',
+                          style: TextStyle(
+                            color: Color(0xFF0F0C29),
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'Live Joint Tracking',
+                        style: TextStyle(color: Color(0xFF00F5D4), fontSize: 10, fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'AI Posture & Form Correction Lab',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Check squat depth, push-up alignment & tech-neck',
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF00F5D4), size: 16),
+          ],
+        ),
       ),
     );
   }

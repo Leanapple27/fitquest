@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../app_state.dart';
+import '../theme/fq_animations.dart';
 
 class LeaguesScreen extends StatefulWidget {
   final AppState appState;
@@ -348,7 +349,16 @@ class _LeaguesScreenState extends State<LeaguesScreen> with SingleTickerProvider
         const SizedBox(height: 16),
         _buildRulesBanner(),
         const SizedBox(height: 16),
-        ..._bracketStudents.map((student) => _buildStudentRankCard(student)),
+        ..._bracketStudents.asMap().entries.map((entry) {
+          final i = entry.key;
+          final student = entry.value;
+          return FQFadeSlide(
+            index: i,
+            child: FQBounce(
+              child: _buildStudentRankCard(student),
+            ),
+          );
+        }),
       ],
     );
   }
@@ -401,7 +411,16 @@ class _LeaguesScreenState extends State<LeaguesScreen> with SingleTickerProvider
           ),
         ),
         const SizedBox(height: 16),
-        ..._allLeagues.map((league) => _buildLeagueOverviewCard(league)),
+        ..._allLeagues.asMap().entries.map((entry) {
+          final i = entry.key;
+          final league = entry.value;
+          return FQFadeSlide(
+            index: i,
+            child: FQBounce(
+              child: _buildLeagueOverviewCard(league),
+            ),
+          );
+        }),
       ],
     );
   }
