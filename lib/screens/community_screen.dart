@@ -67,122 +67,40 @@ class _CommunityScreenState extends State<CommunityScreen> {
       backgroundColor: FqColors.scaffold,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 1,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(7),
-              decoration: BoxDecoration(
-                color: FqColors.lavender,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Text('🛡️', style: TextStyle(fontSize: 16)),
-            ),
-            const SizedBox(width: 9),
-            Text(
-              'Community',
-              style: FqTypography.screenTitle(color: FqColors.ink).copyWith(
-                fontSize: 20,
-              ),
-            ),
-          ],
+        title: const Text(
+          'Community',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFF151B3D),
+          ),
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => LeaguesScreen(appState: widget.appState),
-                    ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(14),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF3C7),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: const Color(0xFFF59E0B).withValues(alpha: 0.5),
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('🏆', style: TextStyle(fontSize: 13)),
-                      SizedBox(width: 4),
-                      Text(
-                        'Leagues',
-                        style: TextStyle(
-                          color: Color(0xFFD97706),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => LeaguesScreen(appState: widget.appState),
+                ),
+              );
+            },
+            icon: const Text('🏆', style: TextStyle(fontSize: 20)),
+            tooltip: 'Weekly Leagues',
+          ),
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => LeaderboardScreen(
+                    currentUserXp: widget.appState.xp,
                   ),
                 ),
-              ),
-            ),
+              );
+            },
+            icon: const Icon(Icons.leaderboard_rounded, color: Color(0xFF302B63), size: 22),
+            tooltip: 'House Leaderboard',
           ),
-          Padding(
-            padding: const EdgeInsets.only(right: 14),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => LeaderboardScreen(
-                        currentUserXp: widget.appState.xp,
-                      ),
-                    ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(14),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 11,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF7E6),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: FqColors.accent.withValues(alpha: 0.5),
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.emoji_events_rounded,
-                        color: Color(0xFFD48806),
-                        size: 16,
-                      ),
-                      SizedBox(width: 4),
-                      Text(
-                        'Ranks',
-                        style: TextStyle(
-                          color: Color(0xFF9254DE),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+          const SizedBox(width: 6),
         ],
       ),
       body: SafeArea(
@@ -532,85 +450,151 @@ class _CommunityScreenState extends State<CommunityScreen> {
   }
 
   Widget _buildLeaguesTabSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              const Text('🏆', style: TextStyle(fontSize: 32)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'WEEKLY PROMOTION LEAGUE',
-                      style: TextStyle(
-                        color: Color(0xFFD97706),
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.6,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      'Gold Division #4',
-                      style: TextStyle(
-                        color: Color(0xFF151B3D),
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    Text(
-                      'Top 3 promote to Diamond • 2d 14h left',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
-                    ),
-                  ],
-                ),
+    return Column(
+      children: [
+        // Main League Division Card
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF302B63), Color(0xFF0F0C29)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF302B63).withValues(alpha: 0.35),
+                blurRadius: 14,
+                offset: const Offset(0, 5),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 44,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => LeaguesScreen(appState: widget.appState),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Text('🥇', style: TextStyle(fontSize: 32)),
+                      SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'WEEKLY DIVISION',
+                            style: TextStyle(
+                              color: Color(0xFF00F5D4),
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          Text(
+                            'Gold League #4',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF302B63),
-                foregroundColor: const Color(0xFF00F5D4),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white12,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'Rank #2 ⚡',
+                      style: TextStyle(
+                        color: Color(0xFF00F5D4),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              child: const Text(
-                'OPEN FULL LEAGUE BRACKET ⚡',
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
+              const SizedBox(height: 14),
+              const Text(
+                'Top 3 students promote to Diamond League on Sunday midnight! Keep logging verified workouts to defend your promotion spot.',
+                style: TextStyle(color: Colors.white70, fontSize: 11.5, height: 1.4),
               ),
-            ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => LeaguesScreen(appState: widget.appState),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF00F5D4),
+                        foregroundColor: const Color(0xFF0F0C29),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text(
+                        'VIEW BRACKET & REWARDS ⚡',
+                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11.5),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+
+        // League Rules Summary
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Row(
+                children: [
+                  Text('🟢', style: TextStyle(fontSize: 12)),
+                  SizedBox(width: 4),
+                  Text('Top 3: Promote', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF16A34A))),
+                ],
+              ),
+              Row(
+                children: [
+                  Text('⚪', style: TextStyle(fontSize: 12)),
+                  SizedBox(width: 4),
+                  Text('4-12: Safe', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
+                ],
+              ),
+              Row(
+                children: [
+                  Text('🔴', style: TextStyle(fontSize: 12)),
+                  SizedBox(width: 4),
+                  Text('Bottom 3: Demote', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFFDC2626))),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
