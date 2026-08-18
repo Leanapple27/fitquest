@@ -116,10 +116,49 @@ class _LeaguesScreenState extends State<LeaguesScreen> with SingleTickerProvider
     {'rank': 15, 'name': 'Yash Patil', 'house': 'Terra', 'xp': 190, 'avatar': '🪵', 'isMe': false},
   ];
 
+  final List<Map<String, dynamic>> _communityLeaderboard = [
+    {
+      'rank': 1,
+      'name': 'Hoops & Dunks Crew',
+      'sport': 'Basketball',
+      'emoji': '🏀',
+      'tier': 'Platinum Division',
+      'level': 8,
+      'members': 20,
+      'weeklyXp': 4180,
+      'streak': '6 Wins 🔥',
+      'isMyCommunity': false,
+    },
+    {
+      'rank': 2,
+      'name': 'Football Strikers Club',
+      'sport': 'Football',
+      'emoji': '⚽',
+      'tier': 'Gold Division',
+      'level': 6,
+      'members': 30,
+      'weeklyXp': 3420,
+      'streak': '4 Wins 🔥',
+      'isMyCommunity': true,
+    },
+    {
+      'rank': 3,
+      'name': 'Volleyball Spikers',
+      'sport': 'Volleyball',
+      'emoji': '🏐',
+      'tier': 'Silver Division',
+      'level': 4,
+      'members': 15,
+      'weeklyXp': 2150,
+      'streak': '2 Wins ⚡',
+      'isMyCommunity': false,
+    },
+  ];
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -198,9 +237,9 @@ class _LeaguesScreenState extends State<LeaguesScreen> with SingleTickerProvider
                                 child: const Text(
                                   'CURRENT',
                                   style: TextStyle(
-                                    color: Color(0xFF0F0C29),
-                                    fontSize: 8.5,
+                                    fontSize: 9.5,
                                     fontWeight: FontWeight.w900,
+                                    color: Color(0xFF151B3D),
                                   ),
                                 ),
                               ),
@@ -209,11 +248,11 @@ class _LeaguesScreenState extends State<LeaguesScreen> with SingleTickerProvider
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Req: ${league['minXp']} • Tier ${league['tier']}/5',
-                          style: const TextStyle(
-                            color: Color(0xFF64748B),
+                          league['multiplier'],
+                          style: TextStyle(
                             fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w800,
+                            color: color,
                           ),
                         ),
                       ],
@@ -221,79 +260,53 @@ class _LeaguesScreenState extends State<LeaguesScreen> with SingleTickerProvider
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               Text(
                 league['description'],
-                style: const TextStyle(color: Color(0xFF475569), fontSize: 13, height: 1.4),
-              ),
-              const SizedBox(height: 18),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.bolt_rounded, color: Color(0xFFF59E0B), size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      'XP Multiplier: ${league['multiplier']}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 13,
-                        color: Color(0xFF1E293B),
-                      ),
-                    ),
-                  ],
-                ),
+                style: const TextStyle(fontSize: 12.5, color: Color(0xFF64748B), height: 1.4),
               ),
               const SizedBox(height: 18),
               const Text(
-                'UNLOCKED REWARDS & PERKS',
+                'LEAGUE PERKS & PRIVILEGES',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: FontWeight.w900,
-                  color: Color(0xFF64748B),
-                  letterSpacing: 0.6,
+                  color: Color(0xFF94A3B8),
+                  letterSpacing: 1.1,
                 ),
               ),
-              const SizedBox(height: 10),
-              ...perks.map((perk) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 16),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          perk.toString(),
-                          style: const TextStyle(
-                            color: Color(0xFF334155),
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
+              const SizedBox(height: 8),
+              ...perks.map((p) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('⚡ ', style: TextStyle(fontSize: 12)),
+                        Expanded(
+                          child: Text(
+                            p.toString(),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF334155),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
+                      ],
+                    ),
+                  )),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
-                height: 46,
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(ctx),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF302B63),
-                    foregroundColor: const Color(0xFF00F5D4),
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  child: const Text('GOT IT', style: TextStyle(fontWeight: FontWeight.w900)),
+                  child: const Text('GOT IT', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
                 ),
               ),
             ],
@@ -324,10 +337,11 @@ class _LeaguesScreenState extends State<LeaguesScreen> with SingleTickerProvider
           unselectedLabelColor: const Color(0xFF64748B),
           indicatorColor: const Color(0xFF00F5D4),
           indicatorWeight: 3,
-          labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12.5),
+          labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11),
           tabs: const [
-            Tab(text: 'MY DIVISION BRACKET'),
-            Tab(text: 'ALL LEAGUES & REWARDS'),
+            Tab(text: 'STUDENT BRACKET'),
+            Tab(text: 'COMMUNITY LEAGUE 👥'),
+            Tab(text: 'ALL TIERS & PERKS'),
           ],
         ),
       ),
@@ -335,6 +349,7 @@ class _LeaguesScreenState extends State<LeaguesScreen> with SingleTickerProvider
         controller: _tabController,
         children: [
           _buildBracketTab(),
+          _buildCommunityLeagueTab(),
           _buildAllLeaguesTab(),
         ],
       ),
@@ -360,6 +375,355 @@ class _LeaguesScreenState extends State<LeaguesScreen> with SingleTickerProvider
           );
         }),
       ],
+    );
+  }
+
+  Widget _buildCommunityLeagueTab() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+      children: [
+        // Community League Header
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF0F0C29), Color(0xFF302B63)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0F0C29).withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white12,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('⚽', style: TextStyle(fontSize: 12)),
+                        SizedBox(width: 5),
+                        Text(
+                          'INTER-COMMUNITY LEAGUE',
+                          style: TextStyle(
+                            color: Color(0xFF00F5D4),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Text(
+                    'SEASON 4',
+                    style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w900),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Sports Community Standings',
+                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Complete team quests, log matches, and win tournament duels to advance your community level!',
+                style: TextStyle(color: Colors.white70, fontSize: 11.5, height: 1.35),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Community Division Progression Ladder
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'COMMUNITY DIVISION PROGRESSION',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF64748B),
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  Text(
+                    'Level 1 ➔ 10',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFF302B63)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  children: [
+                    _communityTierBadge('🥉', 'Bronze', 'LV 1–3', '0 XP', const Color(0xFFCD7F32), false),
+                    _communityTierBadge('🥈', 'Silver', 'LV 4–5', '1,500 XP', const Color(0xFF94A3B8), false),
+                    _communityTierBadge('🥇', 'Gold', 'LV 6–7', '3,000 XP', const Color(0xFFF59E0B), true),
+                    _communityTierBadge('💎', 'Platinum', 'LV 8–9', '4,500 XP', const Color(0xFF06B6D4), false),
+                    _communityTierBadge('👑', 'Champion', 'LV 10', '6,000+ XP', const Color(0xFF8B5CF6), false),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        const Text(
+          'TOP CAMPUS SPORTS COMMUNITIES',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFF64748B),
+            letterSpacing: 1.1,
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        ..._communityLeaderboard.asMap().entries.map((entry) {
+          final i = entry.key;
+          final comm = entry.value;
+          final isMine = comm['isMyCommunity'] == true;
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isMine ? const Color(0xFF00F5D4) : const Color(0xFFE2E8F0),
+                width: isMine ? 2 : 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: i == 0
+                            ? const Color(0xFFFEF3C7)
+                            : i == 1
+                                ? const Color(0xFFF1F5F9)
+                                : const Color(0xFFFFEDD5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          i == 0 ? '🥇' : i == 1 ? '🥈' : '🥉',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Center(
+                        child: Text(comm['emoji'] as String, style: const TextStyle(fontSize: 22)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                comm['name'] as String,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w900,
+                                  color: Color(0xFF151B3D),
+                                ),
+                              ),
+                              if (isMine) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF302B63),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text(
+                                    'YOU',
+                                    style: TextStyle(
+                                      color: Color(0xFF00F5D4),
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${comm['sport']} • ${comm['tier']} • ${comm['members']} Players',
+                            style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '+${comm['weeklyXp']} XP',
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFFF59E0B),
+                          ),
+                        ),
+                        Text(
+                          comm['streak'] as String,
+                          style: const TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF10B981),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'COMMUNITY LEVEL ${comm['level']} / 10',
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF64748B),
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                    Text(
+                      '${((comm['level'] as int) * 10)}% TO LV ${((comm['level'] as int) + 1)}',
+                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFF302B63)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: ((comm['level'] as int) / 10).toDouble(),
+                    minHeight: 6,
+                    backgroundColor: const Color(0xFFE2E8F0),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF302B63)),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _communityTierBadge(String icon, String name, String levels, String reqXp, Color color, bool isCurrent) {
+    return Container(
+      margin: const EdgeInsets.only(right: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: isCurrent ? color.withValues(alpha: 0.12) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isCurrent ? color : const Color(0xFFE2E8F0),
+          width: isCurrent ? 1.8 : 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 22)),
+          const SizedBox(height: 4),
+          Text(
+            name,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              color: isCurrent ? color : const Color(0xFF1E293B),
+            ),
+          ),
+          Text(
+            levels,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              color: isCurrent ? color : const Color(0xFF64748B),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFCBD5E1)),
+            ),
+            child: Text(
+              reqXp,
+              style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Color(0xFF475569)),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

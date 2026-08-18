@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app_state.dart';
 import '../notification_service.dart';
@@ -12,14 +13,13 @@ import 'community_screen.dart';
 import 'duels_screen.dart';
 import 'fitmap_screen.dart';
 import 'leagues_screen.dart';
-import 'posture_correction_screen.dart';
 import 'profile_screen.dart';
 import 'quests_screen.dart';
 import 'quiz_screen.dart';
 import 'rewards_screen.dart';
+import 'shop_screen.dart';
 import 'snap_screen.dart';
 import 'steps_screen.dart';
-import 'workout_screen.dart';
 
 class StudentHomeScreen extends StatefulWidget {
   const StudentHomeScreen({super.key});
@@ -93,37 +93,120 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: appState,
-      builder: (context, child) {
-        return Scaffold(
-          backgroundColor: FqColors.scaffold,
-          body: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 320),
-            reverseDuration: const Duration(milliseconds: 220),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) {
-              final curved = CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-              );
-              return FadeTransition(
-                opacity: curved,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0.025, 0),
-                    end: Offset.zero,
-                  ).animate(curved),
-                  child: child,
-                ),
-              );
-            },
-            child: _buildSelectedPage(),
-          ),
-          bottomNavigationBar: _buildBottomNavigation(),
-        );
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (selectedIndex != 0) {
+          setState(() => selectedIndex = 0);
+        } else {
+          _showExitConfirmationDialog();
+        }
       },
+      child: AnimatedBuilder(
+        animation: appState,
+        builder: (context, child) {
+          return Scaffold(
+            backgroundColor: FqColors.scaffold,
+            body: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 320),
+              reverseDuration: const Duration(milliseconds: 220),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) {
+                final curved = CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                );
+                return FadeTransition(
+                  opacity: curved,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0.025, 0),
+                      end: Offset.zero,
+                    ).animate(curved),
+                    child: child,
+                  ),
+                );
+              },
+              child: _buildSelectedPage(),
+            ),
+            bottomNavigationBar: _buildBottomNavigation(),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showExitConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF3C7),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: const Center(
+                child: Text('🏃', style: TextStyle(fontSize: 30)),
+              ),
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'Exit FitQuest?',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 18,
+                color: Color(0xFF151B3D),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Are you sure you want to leave?\nKeep your daily workout streak burning! 🔥',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12.5, color: Color(0xFF64748B), height: 1.35),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => SystemNavigator.pop(),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFFEF4444),
+                      side: const BorderSide(color: Color(0xFFFCA5A5)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text('EXIT', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF302B63),
+                      foregroundColor: const Color(0xFF00F5D4),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text('STAY & PLAY 🔥', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -357,6 +440,42 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             ],
           ),
         ),
+
+        // Shop Coin Pill
+        FQBounce(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => ShopScreen(appState: appState)),
+            );
+          },
+          child: Container(
+            height: 42,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF302B63), Color(0xFF0F0C29)],
+              ),
+              borderRadius: BorderRadius.circular(13),
+              border: Border.all(color: const Color(0xFF00F5D4), width: 1.2),
+            ),
+            child: Row(
+              children: [
+                const Text('🪙', style: TextStyle(fontSize: 14)),
+                const SizedBox(width: 5),
+                Text(
+                  '${appState.fitCoins}',
+                  style: const TextStyle(
+                    color: Color(0xFF00F5D4),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
 
         // Notification Bell
         Container(
@@ -763,24 +882,26 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         appState.completedDailyQuestIds.isNotEmpty ||
         appState.completedQuests > 0;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFF7545), Color(0xFFFF5722)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF7545).withValues(alpha: 0.25),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
+    return FQBounce(
+      onTap: _showStreakMatrixDialog,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFF7545), Color(0xFFFF5722)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFF7545).withValues(alpha: 0.25),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
       child: Column(
         children: [
           Row(
@@ -996,7 +1117,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 
   // ---------------------------------------------------------------------------
@@ -1073,75 +1195,104 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _actionCard(
-                icon: Icons.sports_mma_rounded,
-                iconColor: const Color(0xFFEF4444),
-                title: '1v1 Duels',
-                subtitle: 'Wager XP & Battle',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => DuelsScreen(appState: appState)),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _actionCard(
-                icon: Icons.military_tech_rounded,
-                iconColor: const Color(0xFFF59E0B),
-                title: 'Weekly Leagues',
-                subtitle: 'Gold Division #4',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => LeaguesScreen(appState: appState)),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _actionCard(
-                icon: Icons.auto_awesome_rounded,
-                iconColor: const Color(0xFF00F5D4),
-                title: 'AI Posture Lab',
-                subtitle: 'Check Form & Angle',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => PostureCorrectionScreen(appState: appState)),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _actionCard(
-                icon: Icons.fitness_center_rounded,
-                iconColor: const Color(0xFF3B82F6),
-                title: 'Workout Center',
-                subtitle: 'Guided Exercises',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => WorkoutScreen(appState: appState)),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
       ],
+    );
+  }
+
+  void _showStreakMatrixDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Center(
+                    child: Text('🔥', style: TextStyle(fontSize: 26)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${appState.streak} Day Active Streak',
+                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Color(0xFF151B3D)),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        '1.5x Multiplier Active ⚡',
+                        style: TextStyle(color: Color(0xFFD97706), fontWeight: FontWeight.w800, fontSize: 11.5),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: const Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('7-Day Milestone', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                      Text('UNLOCKED ✓', style: TextStyle(color: Color(0xFF16A34A), fontWeight: FontWeight.w900, fontSize: 11)),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('14-Day Milestone (2x XP)', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                      Text('2 Days Left', style: TextStyle(color: Color(0xFFD97706), fontWeight: FontWeight.w800, fontSize: 11)),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Streak Freeze Protection', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                      Text('1 Available 🛡️', style: TextStyle(color: Color(0xFF3B82F6), fontWeight: FontWeight.w800, fontSize: 11)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF302B63),
+                  foregroundColor: const Color(0xFF00F5D4),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                child: const Text('KEEP STREAK BURNING 🔥', style: TextStyle(fontWeight: FontWeight.w900)),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

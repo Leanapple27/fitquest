@@ -59,6 +59,19 @@ class AppState extends ChangeNotifier {
     'celebration',
     'runner',
   };
+
+// -----------------------------
+// SHOP & PET COMPANION DATA
+// -----------------------------
+  int fitCoins = 180;
+  final Set<String> unlockedPets = {'baby_dragon'};
+  String activePet = 'baby_dragon';
+  int petLevel = 1;
+  int petHunger = 80;
+  final Set<String> unlockedFrames = {'neon_cyber'};
+  String activeFrame = 'neon_cyber';
+  final List<String> customStickers = [];
+
 // Genuine starting badges.
   static const List<String> starterBadges = [
     'xp_explorer',
@@ -885,10 +898,65 @@ weeklyChallengeWeek =
         'runner',
       ]);
 
-    _rebuildBadges();
-
     notifyListeners();
 
     _saveProgress();
+  }
+
+  // -----------------------------
+  // SHOP & MARKETPLACE METHODS
+  // -----------------------------
+
+  bool convertXpToCoins(int xpToConvert) {
+    if (xpToConvert <= 0 || xp < xpToConvert) return false;
+    final coinsGained = (xpToConvert / 10).floor();
+    xp -= xpToConvert;
+    fitCoins += coinsGained;
+    _saveProgress();
+    notifyListeners();
+    return true;
+  }
+
+  bool buyShopItem(String itemId, int price, String category) {
+    if (fitCoins < price) return false;
+    fitCoins -= price;
+    if (category == 'pet') {
+      unlockedPets.add(itemId);
+      activePet = itemId;
+    } else if (category == 'frame') {
+      unlockedFrames.add(itemId);
+      activeFrame = itemId;
+    } else if (category == 'sticker') {
+      unlockedStickers.add(itemId);
+    } else if (category == 'food') {
+      petHunger = (petHunger + 35).clamp(0, 100);
+      petLevel += 1;
+    }
+    _saveProgress();
+    notifyListeners();
+    return true;
+  }
+
+  void equipPet(String petId) {
+    if (unlockedPets.contains(petId)) {
+      activePet = petId;
+      _saveProgress();
+      notifyListeners();
+    }
+  }
+
+  void equipFrame(String frameId) {
+    if (unlockedFrames.contains(frameId)) {
+      activeFrame = frameId;
+      _saveProgress();
+      notifyListeners();
+    }
+  }
+
+  void addCustomSticker(String stickerName) {
+    customStickers.add(stickerName);
+    unlockedStickers.add(stickerName);
+    _saveProgress();
+    notifyListeners();
   }
 }

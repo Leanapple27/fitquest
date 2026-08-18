@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../theme/fq_colors.dart';
 import '../theme/fq_typography.dart';
@@ -25,6 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool obscurePassword = true;
   bool isCreatingAccount = false;
   bool isLoading = false;
+  bool alwaysLogin = true;
 
   String selectedHouse = 'Phoenix';
 
@@ -146,6 +148,9 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         }
       }
+      
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('always_login', alwaysLogin);
 
       if (!mounted) return;
 
@@ -331,6 +336,29 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 16),
                     _buildPasswordField(),
                     const SizedBox(height: 24),
+
+                    // Always Login Toggle
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: alwaysLogin,
+                          activeColor: const Color(0xFF302B63),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                          onChanged: (val) => setState(() => alwaysLogin = val ?? true),
+                        ),
+                        const Expanded(
+                          child: Text(
+                            'Always keep me logged in 🔒',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF151B3D),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
 
                     // Submit Action Button
                     SizedBox(

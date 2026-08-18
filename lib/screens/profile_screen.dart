@@ -7,11 +7,14 @@ import '../app_state.dart';
 import '../theme/fq_colors.dart';
 import '../theme/fq_radii.dart';
 import '../theme/fq_typography.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'activity_calendar_screen.dart';
 import 'nutrition_screen.dart';
 import 'privacy_safety_screen.dart';
 import 'rewards_screen.dart';
 import 'settings_screen.dart';
+import 'shop_screen.dart';
+import 'welcome_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final AppState appState;
@@ -241,6 +244,22 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
         actions: [
           IconButton(
+            tooltip: 'Shop',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ShopScreen(appState: widget.appState),
+                ),
+              );
+            },
+            icon: const Icon(
+              Icons.shopping_bag_outlined,
+              color: FqColors.ink,
+            ),
+          ),
+          IconButton(
+            tooltip: 'Settings',
             onPressed: () {
               Navigator.push(
                 context,
@@ -1178,11 +1197,19 @@ class _ProfileScreenState extends State<ProfileScreen>
     required int level,
     required double size,
   }) {
-    final frameColor = selectedFrame == 'gold'
-        ? FqColors.accent
-        : selectedFrame == 'silver'
-            ? const Color(0xFFD9E2F2)
-            : const Color(0xFFB87842);
+    final frameColor = selectedFrame == 'neon_cyber'
+        ? const Color(0xFF00F5D4)
+        : selectedFrame == 'gold_flame'
+            ? const Color(0xFFF59E0B)
+            : selectedFrame == 'diamond_aura'
+                ? const Color(0xFF38BDF8)
+                : selectedFrame == 'royal_crown'
+                    ? const Color(0xFFEC4899)
+                    : selectedFrame == 'gold'
+                        ? const Color(0xFFFFD54F)
+                        : selectedFrame == 'silver'
+                            ? const Color(0xFFD9E2F2)
+                            : const Color(0xFFB87842);
 
     return AnimatedBuilder(
       animation: _avatarAnimationController,
@@ -1340,6 +1367,10 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _buildFrameOptions(int level) {
     final frames = [
       ('none', 'None', 1, Icons.circle_outlined),
+      ('neon_cyber', 'Cyber', 1, Icons.circle),
+      ('gold_flame', 'Sunfire', 1, Icons.local_fire_department_rounded),
+      ('diamond_aura', 'Diamond', 1, Icons.diamond_rounded),
+      ('royal_crown', 'Royal', 1, Icons.military_tech_rounded),
       ('bronze', 'Bronze', 2, Icons.circle),
       ('silver', 'Silver', 3, Icons.circle),
       ('gold', 'Gold', 5, Icons.auto_awesome_rounded),
@@ -2276,9 +2307,15 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('always_login', false);
     await FirebaseAuth.instance.signOut();
     if (!mounted) return;
-    Navigator.of(context).popUntil((route) => route.isFirst);
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+      (route) => false,
+    );
   }
 }
 

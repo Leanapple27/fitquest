@@ -1,11 +1,14 @@
+import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../app_state.dart';
+import '../services/fq_audio_service.dart';
 import '../theme/fq_animations.dart';
 import '../theme/fq_colors.dart';
 import '../theme/fq_typography.dart';
 import 'ai_vision_workout_screen.dart';
+import 'duels_screen.dart';
 import 'workout_screen.dart';
 
 class QuestsScreen extends StatefulWidget {
@@ -29,55 +32,128 @@ class _QuestsScreenState extends State<QuestsScreen> {
   bool _loading = true;
   String? _error;
   int _activeFilter = 0; // 0: All, 1: Daily, 2: Weekly, 3: Workouts
+  bool _showAllDailyQuests = false;
 
   static const List<Map<String, dynamic>> _defaultDailyQuests = [
     {
       'id': 'morning_warrior',
-      'title': 'Morning Warrior',
-      'description': 'Complete 20 minutes of brisk physical activity today.',
-      'icon': '🏃',
+      'title': 'Morning Campus Stride',
+      'description': 'Walk 1,500 steps briskly before the morning school bell rings.',
+      'icon': '🚶',
       'category': 'CARDIO',
-      'xp': 100,
+      'xp': 60,
     },
     {
       'id': 'hydration_hero',
-      'title': 'Hydration Hero',
-      'description': 'Drink 8 glasses of water (2 Litres) throughout the day.',
+      'title': 'Hydro Charge Champion',
+      'description': 'Drink 8 glasses of water (2.0 Litres) across your classes today.',
       'icon': '💧',
       'category': 'HYDRATION',
       'xp': 50,
     },
     {
+      'id': 'stair_climber',
+      'title': 'Stair Climber Hero',
+      'description': 'Climb 4 flights of stairs instead of taking an elevator or ramp.',
+      'icon': '🪜',
+      'category': 'AGILITY',
+      'xp': 50,
+    },
+    {
+      'id': 'recess_dash',
+      'title': 'Recess 100m Dash',
+      'description': 'Sprint 100m across the sports ground with high energy.',
+      'icon': '⚡',
+      'category': 'SPEED',
+      'xp': 75,
+    },
+    {
       'id': 'stretch_master',
-      'title': 'Stretch Master',
-      'description': 'Complete 10 minutes of full-body mobility and stretching.',
+      'title': 'Stretch & Mobility Master',
+      'description': 'Complete 10 minutes of hamstring, shoulder & back stretching.',
       'icon': '🧘',
       'category': 'FLEXIBILITY',
       'xp': 75,
     },
     {
+      'id': 'desk_neck_relief',
+      'title': 'Desk Neck & Posture Relief',
+      'description': '5 slow cervical chin-tucks and 10 shoulder rolls after study hours.',
+      'icon': '💆',
+      'category': 'POSTURE',
+      'xp': 40,
+    },
+    {
+      'id': 'ball_play',
+      'title': 'Playground Ball Play',
+      'description': '10 minutes of football dribbles, basketball shots, or catch play.',
+      'icon': '🏀',
+      'category': 'SPORTS',
+      'xp': 80,
+    },
+    {
+      'id': 'backpack_posture',
+      'title': 'Backpack Posture Stride',
+      'description': 'Walk with chest tall, shoulders relaxed & core engaged for 10 mins.',
+      'icon': '🎒',
+      'category': 'POSTURE',
+      'xp': 45,
+    },
+    {
+      'id': 'high_knee_power',
+      'title': 'High-Knee Power March',
+      'description': 'Complete 30 dynamic high-knee lifts on the spot during recess.',
+      'icon': '🔥',
+      'category': 'POWER',
+      'xp': 60,
+    },
+    {
       'id': 'step_explorer',
-      'title': 'Step Explorer',
-      'description': 'Reach 5,000 steps walking across campus today.',
+      'title': 'Step Explorer 5,000',
+      'description': 'Reach 5,000 total steps across your school campus today.',
       'icon': '👟',
       'category': 'STEPS',
       'xp': 80,
     },
     {
-      'id': 'campus_hotspot',
-      'title': 'Campus Trekker',
-      'description': 'Check in at any campus FitMap outdoor activity spot.',
+      'id': 'park_walk',
+      'title': 'Fresh Air Outdoor Walk',
+      'description': 'Enjoy a 15-minute nature walk in the campus courtyard or park.',
       'icon': '🌳',
       'category': 'ADVENTURE',
-      'xp': 60,
+      'xp': 50,
+    },
+    {
+      'id': 'sleep_champion',
+      'title': 'Sleep Recovery Champion',
+      'description': 'Log 8 hours of restful, uninterrupted sleep for brain recovery.',
+      'icon': '🛌',
+      'category': 'RECOVERY',
+      'xp': 50,
+    },
+    {
+      'id': 'squat_charge',
+      'title': 'Study Break Squat Charge',
+      'description': 'Perform 15 clean bodyweight squats during a 5-min study break.',
+      'icon': '🏋️',
+      'category': 'STRENGTH',
+      'xp': 70,
+    },
+    {
+      'id': 'plank_hero',
+      'title': 'Core Armor Plank Hold',
+      'description': 'Hold a solid, steady 45-second straight-arm or elbow plank.',
+      'icon': '🛡️',
+      'category': 'CORE',
+      'xp': 65,
     },
   ];
 
   static const List<Map<String, dynamic>> _defaultWeeklyQuests = [
     {
       'id': 'weekly_fitness_warrior',
-      'title': 'Weekly Fitness Warrior',
-      'description': 'Complete 5 fitness sessions or sports activities this week.',
+      'title': 'Weekly Fitness Warriors Boss Raid',
+      'description': 'Complete 5 verified fitness sessions or sports matches this week.',
       'icon': '🏆',
       'category': 'MILESTONE',
       'xp': 300,
@@ -202,6 +278,8 @@ class _QuestsScreenState extends State<QuestsScreen> {
   void _completeQuest(String id, int xp) {
     if (_isCompleted(id)) return;
 
+    FQAudioService().playXpGain();
+
     final awarded = widget.appState.completeDynamicQuest(
       questId: id,
       rewardXp: xp,
@@ -250,6 +328,17 @@ class _QuestsScreenState extends State<QuestsScreen> {
     );
   }
 
+  void _open1v1Duels() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DuelsScreen(
+          appState: widget.appState,
+        ),
+      ),
+    );
+  }
+
   void _openAiVisionWorkout({
     required String questId,
     required String title,
@@ -276,17 +365,25 @@ class _QuestsScreenState extends State<QuestsScreen> {
         id.contains('water') ||
         id.contains('step') ||
         id.contains('campus') ||
-        id.contains('hotspot')) {
+        id.contains('hotspot') ||
+        id.contains('desk') ||
+        id.contains('sleep') ||
+        id.contains('backpack') ||
+        id.contains('stair') ||
+        id.contains('park')) {
       return false;
     }
     return cat == 'CARDIO' ||
         cat == 'WORKOUT' ||
         cat == 'FLEXIBILITY' ||
         cat == 'FITNESS' ||
+        cat == 'STRENGTH' ||
+        cat == 'CORE' ||
         id.contains('workout') ||
         id.contains('warrior') ||
         id.contains('squat') ||
         id.contains('pushup') ||
+        id.contains('plank') ||
         id.contains('stretch');
   }
 
@@ -322,6 +419,35 @@ class _QuestsScreenState extends State<QuestsScreen> {
           ],
         ),
         actions: [
+          // Weekend Warriors Top Notification Pill
+          InkWell(
+            onTap: _showWeekendWarriorsDialog,
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF3C7),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.5)),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('🔔', style: TextStyle(fontSize: 13)),
+                  SizedBox(width: 4),
+                  Text(
+                    '2x Weekend XP',
+                    style: TextStyle(
+                      color: Color(0xFFB45309),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           IconButton(
             onPressed: _loading ? null : _loadQuests,
             icon: const Icon(Icons.refresh_rounded, color: FqColors.ink),
@@ -341,6 +467,120 @@ class _QuestsScreenState extends State<QuestsScreen> {
               completedCount: completed,
               totalQuests: total,
               xp: widget.appState.xp,
+            ),
+            const SizedBox(height: 14),
+
+            // Quick Launcher Bar: 1v1 Battle Arena & Workout Center
+            Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: _open1v1Duels,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF302B63), Color(0xFF24243E)],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF302B63).withValues(alpha: 0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        children: [
+                          Text('⚔️', style: TextStyle(fontSize: 18)),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '1V1 DUELS',
+                                  style: TextStyle(
+                                    color: Color(0xFF00F5D4),
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                                Text(
+                                  'Battle Arena',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.arrow_forward_ios_rounded, color: Colors.white70, size: 12),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: InkWell(
+                    onTap: _openWorkoutCenter,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        children: [
+                          Text('🏋️', style: TextStyle(fontSize: 18)),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'WORKOUTS',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                                Text(
+                                  'Center Hub',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.arrow_forward_ios_rounded, color: Colors.white70, size: 12),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
 
@@ -401,7 +641,11 @@ class _QuestsScreenState extends State<QuestsScreen> {
                           ],
                         ),
                         const SizedBox(height: 10),
-                        ..._dailyQuests.asMap().entries.map((entry) {
+                        ...(_showAllDailyQuests ? _dailyQuests : _dailyQuests.take(5))
+                            .toList()
+                            .asMap()
+                            .entries
+                            .map((entry) {
                           final i = entry.key;
                           final q = entry.value;
                           return Padding(
@@ -421,12 +665,33 @@ class _QuestsScreenState extends State<QuestsScreen> {
                             ),
                           );
                         }),
+                        if (_dailyQuests.length > 5) ...[
+                          Center(
+                            child: OutlinedButton.icon(
+                              onPressed: () => setState(() => _showAllDailyQuests = !_showAllDailyQuests),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF302B63),
+                                side: const BorderSide(color: Color(0xFFCBD5E1)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              ),
+                              icon: Icon(_showAllDailyQuests ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded, size: 18),
+                              label: Text(
+                                _showAllDailyQuests
+                                    ? 'SHOW LESS (5 QUESTS)'
+                                    : 'SHOW ALL ${_dailyQuests.length} QUESTS (+${_dailyQuests.length - 5} MORE)',
+                                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
                         const SizedBox(height: 16),
                       ],
 
                       if (_activeFilter == 0 || _activeFilter == 2) ...[
                         Text(
-                          'WEEKLY MILESTONE CHALLENGE',
+                          'WEEKLY FITNESS WARRIOR RAID',
                           style: FqTypography.sectionLabel(color: FqColors.muted),
                         ),
                         const SizedBox(height: 10),
@@ -736,9 +1001,8 @@ class _QuestsScreenState extends State<QuestsScreen> {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Center(
-                  child: Text(
-                    completed ? '✅' : emoji,
-                    style: const TextStyle(fontSize: 24),
+                  child: _AnimatedQuestEmoji(
+                    emoji: completed ? '✅' : emoji,
                   ),
                 ),
               ),
@@ -917,10 +1181,9 @@ class _QuestsScreenState extends State<QuestsScreen> {
                       xp: xp,
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1E1B4B),
+                      backgroundColor: const Color(0xFF151B3D),
                       foregroundColor: const Color(0xFF00F5D4),
                       elevation: 0,
-                      side: const BorderSide(color: Color(0xFF00F5D4), width: 1.2),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -1041,110 +1304,476 @@ class _QuestsScreenState extends State<QuestsScreen> {
   }) {
     final progress = widget.appState.weeklyFitnessActivities;
     final completed = widget.appState.weeklyFitnessWarriorCompleted;
-    final ratio = (progress.clamp(0, 5) / 5).toDouble();
+    final ratio = (progress.clamp(0, 10) / 10).toDouble();
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: completed
-              ? FqColors.success.withValues(alpha: 0.3)
-              : const Color(0xFFE7E8EE),
+    return InkWell(
+      onTap: _showWeeklyWarriorsBossRaidDialog,
+      borderRadius: BorderRadius.circular(22),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: completed
+                ? const Color(0xFF10B981)
+                : const Color(0xFFF59E0B).withValues(alpha: 0.5),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF7E6),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Center(
-              child: Text(emoji, style: const TextStyle(fontSize: 26)),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. Header: Emblem + Title + XP Badge
+            Row(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                        color: FqColors.ink,
-                      ),
-                    ),
-                    Text(
-                      '+$xp XP',
-                      style: const TextStyle(
-                        color: FqColors.energy,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: const TextStyle(
-                    color: Color(0xFF747887),
-                    fontSize: 11,
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF7E6),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFFFD54F)),
+                  ),
+                  child: Center(
+                    child: _AnimatedQuestEmoji(emoji: emoji),
                   ),
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      completed ? '5 / 5 Workouts Done ✓' : '$progress / 5 Workouts Completed',
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        color: completed ? FqColors.success : FqColors.ink,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEF3C7),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'WEEKLY RAID',
+                              style: TextStyle(
+                                fontSize: 8.5,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFFB45309),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Text(
+                            'Ends Sun 11:59 PM',
+                            style: TextStyle(fontSize: 10, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                          ),
+                        ],
                       ),
-                    ),
-                    Text(
-                      '${(ratio * 100).round()}%',
-                      style: const TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w900,
-                        color: FqColors.primaryMid,
+                      const SizedBox(height: 2),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF151B3D),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 6),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: LinearProgressIndicator(
-                    value: ratio,
-                    minHeight: 7,
-                    backgroundColor: const Color(0xFFEEF2F6),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      completed ? FqColors.success : FqColors.primary,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF302B63),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '+$xp XP',
+                    style: const TextStyle(
+                      color: Color(0xFF00F5D4),
+                      fontWeight: FontWeight.w900,
+                      fontSize: 11,
                     ),
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+
+            // 2. Description
+            Text(
+              description,
+              style: const TextStyle(
+                color: Color(0xFF64748B),
+                fontSize: 11.5,
+                height: 1.35,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // 3. Progress Bar & Requirements
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  completed ? '10 / 10 Activities Completed ✓' : '$progress / 10 Fitness Activities Done',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: completed ? const Color(0xFF10B981) : const Color(0xFF151B3D),
+                  ),
+                ),
+                Text(
+                  '${(ratio * 100).round()}%',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF302B63),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: ratio,
+                minHeight: 7,
+                backgroundColor: const Color(0xFFEEF2F6),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  completed ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // 4. Reward Showcase Pill & Tap Action
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: const Row(
+                children: [
+                  Text('🏷️', style: TextStyle(fontSize: 16)),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Reward: Exclusive Raid Champion Animated Sticker',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF334155),
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Color(0xFF64748B)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // BOSS RAID STATS MODAL
+  // ---------------------------------------------------------------------------
+
+  void _showWeeklyWarriorsBossRaidDialog() {
+    final activities = widget.appState.weeklyFitnessActivities;
+    final completed = widget.appState.weeklyFitnessWarriorCompleted;
+    const totalStepsTarget = 100000;
+    const currentCampusSteps = 84200;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(22),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF7E6),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFFFD54F)),
+                  ),
+                  child: const Text('🏆', style: TextStyle(fontSize: 28)),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'WEEKLY FITNESS RAID',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: FqColors.energy,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Weekly Fitness Warrior',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF151B3D),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF302B63),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Text(
+                    '+300 XP',
+                    style: TextStyle(
+                      color: Color(0xFF00F5D4),
+                      fontWeight: FontWeight.w900,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+
+            // Global Campus Raid Progress
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'CAMPUS RAID: POOLED STEPS & XP',
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                      Text(
+                        '$currentCampusSteps / $totalStepsTarget Steps',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF302B63),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: const LinearProgressIndicator(
+                      value: currentCampusSteps / totalStepsTarget,
+                      minHeight: 8,
+                      backgroundColor: Color(0xFFE2E8F0),
+                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF59E0B)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Student Contribution Stats
+            const Text(
+              'YOUR CONTRIBUTION & MISSIONS',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF64748B),
+                letterSpacing: 0.8,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _raidMissionItem('🏋️ 10 Fitness Activities', '$activities / 10 Done', activities >= 10),
+            _raidMissionItem('💧 7-Day Hydration Week', '5 / 7 Days Done', false),
+            _raidMissionItem('⚡ Campus Raid Contribution', '+450 XP Pooled', true),
+
+            const SizedBox(height: 14),
+
+            // Exclusive Sticker Reward Banner
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF3C7),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFF59E0B)),
+                    ),
+                    child: const Center(
+                      child: Text('🏷️', style: TextStyle(fontSize: 24)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'EXCLUSIVE REWARD: RAID CHAMPION STICKER',
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFFB45309),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Complete all 3 missions before Sunday midnight to unlock this exclusive animated sticker!',
+                          style: TextStyle(fontSize: 11, color: Color(0xFF78350F), height: 1.3),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF302B63),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: Text(
+                  completed ? 'CLAIMED ✓' : 'GOT IT, LET\'S RAID! 🔥',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _raidMissionItem(String title, String progress, bool isDone) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDone ? const Color(0xFFF0FDF4) : Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: isDone ? const Color(0xFF86EFAC) : const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
+          Text(progress, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: isDone ? const Color(0xFF16A34A) : const Color(0xFF64748B))),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // WEEKEND WARRIOR NOTIFICATION DIALOG
+  // ---------------------------------------------------------------------------
+
+  void _showWeekendWarriorsDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        title: const Row(
+          children: [
+            Text('🔔', style: TextStyle(fontSize: 22)),
+            SizedBox(width: 8),
+            Text(
+              'Weekend 2x XP Active!',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+            ),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Every verified workout, quest, and community match completed this weekend earns DOUBLE XP (+250 XP bonus)!',
+              style: TextStyle(fontSize: 13, color: Color(0xFF555A72), height: 1.35),
+            ),
+            SizedBox(height: 12),
+            Text(
+              '⚡ 2x XP Multiplier\n🏆 Community Tournament Leaderboard Boost\n🪙 2x FitCoins Conversion',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF302B63)),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('GOT IT! 🔥', style: TextStyle(fontWeight: FontWeight.w900)),
           ),
         ],
       ),
@@ -1349,6 +1978,65 @@ class _QuestsScreenState extends State<QuestsScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ANIMATED EMOJI COMPONENT (Pulsing Fire, Bouncing Ball, Rippling Water)
+// -----------------------------------------------------------------------------
+
+class _AnimatedQuestEmoji extends StatefulWidget {
+  final String emoji;
+  const _AnimatedQuestEmoji({required this.emoji});
+
+  @override
+  State<_AnimatedQuestEmoji> createState() => _AnimatedQuestEmojiState();
+}
+
+class _AnimatedQuestEmojiState extends State<_AnimatedQuestEmoji>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final emoji = widget.emoji;
+    final isFireOrPower = emoji == '🔥' || emoji == '⚡' || emoji == '🏃';
+    final isWater = emoji == '💧';
+    final isBall = emoji == '🏀' || emoji == '👟';
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        if (isFireOrPower) {
+          final scale = 0.92 + (_controller.value * 0.16);
+          return Transform.scale(scale: scale, child: child);
+        } else if (isWater) {
+          final pulse = math.sin(_controller.value * math.pi) * 0.12;
+          return Transform.scale(scale: 1.0 + pulse, child: child);
+        } else if (isBall) {
+          final bounce = -math.sin(_controller.value * math.pi) * 4.0;
+          return Transform.translate(offset: Offset(0, bounce), child: child);
+        }
+        final subtle = math.sin(_controller.value * math.pi) * 0.08;
+        return Transform.scale(scale: 1.0 + subtle, child: child);
+      },
+      child: Text(emoji, style: const TextStyle(fontSize: 24)),
     );
   }
 }
